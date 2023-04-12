@@ -1,0 +1,51 @@
+#include <iostream>
+#include <string>
+#include <complex>
+#include "Qbit.h"
+#include <Eigen/Dense>
+
+qce::Qubit::Qubit(std::complex<double> first, std::complex<double> second) {
+    this->state = Eigen::Array2cd(first, second);
+}
+
+qce::Qubit::Qubit() {
+    using namespace std::complex_literals;
+    this->state = Eigen::Array2cd(0. + 0i, 0. + 0i);
+}
+
+qce::Qubit::Qubit(const Qubit& qubit) {
+    this->state = Eigen::Array2cd(qubit.state(0), qubit.state(1));
+}
+
+qce::Qubit::Qubit(const qce::QubitState& otherState) {
+    this->state = qce::QubitState(otherState(0), otherState(1));
+}
+
+qce::QubitStateT qce::Qubit::braState() const {
+    qce::QubitState conjugatedState = this->state.conjugate().nestedExpression();
+    return Eigen::Transpose<qce::QubitState>(conjugatedState).nestedExpression();
+}
+
+/*
+    For now it's actually original state
+*/
+qce::QubitState qce::Qubit::ketState() const {
+    return this->state;
+}
+
+qce::QubitState qce::Qubit::getState() const {
+    return this->state;
+}
+
+void qce::Qubit::setState(const QubitState& newState) {
+    this->state = qce::QubitState(newState[0], newState[1]);
+}
+
+qce::DMatrState qce::Qubit::getDensityMatrix() const {
+    return this->ketState() * this->braState();
+}
+
+qce::PureQubit::PureQubit(std::complex<double> first, std::complex<double> second): Qubit(first, second) {}
+qce::PureQubit::PureQubit(): Qubit() {}
+qce::PureQubit::PureQubit(const PureQubit& qubit): Qubit(qubit) {}
+qce::PureQubit::PureQubit(const qce::QubitState& state): Qubit(state) {}

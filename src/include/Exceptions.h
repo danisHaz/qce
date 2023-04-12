@@ -1,0 +1,5 @@
+#pragma once
+
+#define NO_ERROR_CODE 0
+#define INVALID_ARGUMENT_ERROR_CODE 1
+#define NOT_IMPLEMENTED_ERROR_CODE 112
