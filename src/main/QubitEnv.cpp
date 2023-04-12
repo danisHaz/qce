@@ -6,13 +6,6 @@ qce::QubitEnv::QubitEnv() {
     this->arr = std::vector<qce::Qubit>();
 }
 
-qce::QubitEnv::QubitEnv(Qubit* qubitArr, std::size_t arrayLength) {
-    this->arr = std::vector<qce::Qubit>(arrayLength);
-    for (std::size_t i = 0; i < arrayLength; i++) {
-        this->arr[i] = qubitArr[i];
-    }
-}
-
 qce::QubitEnv::QubitEnv(const std::vector<qce::Qubit>& vec) {
     this->arr = std::vector<qce::Qubit>(vec.size());
     for (std::size_t i = 0; i < vec.size(); i++) {

@@ -15,7 +15,7 @@ int main() {
     std::unique_ptr<qce::QubitEnv> env(new qce::QubitEnv(qv));
     std::unique_ptr<qce::operations::ZGate> o = std::make_unique<qce::operations::ZGate>(nullptr, 0);
 
-    std::unique_ptr<qce::operations::OperationResultHolder<qce::QubitMat_t>> result(o->constructOperation());
-    std::cout << (*result->result) * fqbit.getState() << "\n";
+    // std::unique_ptr<qce::operations::OperationResultHolder<qce::QubitMat_t>> result(o->constructOperation());
+    // std::cout << (*result->result) * fqbit.getState() << "\n";
     return 0;
 }

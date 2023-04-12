@@ -19,7 +19,6 @@ namespace qce {
         public:
 
         QubitEnv();
-        QubitEnv(Qubit* qubitArr, std::size_t arrayLength);
         QubitEnv(const std::vector<Qubit>& vec);
         QubitEnv(const Qubit& qubit);
         QubitEnv(std::size_t qubitNumber, Qubit initialState = zero_basis_state);
