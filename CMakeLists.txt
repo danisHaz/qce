@@ -10,6 +10,8 @@ set(SOURCES
     src/main/OperationGraph.cpp
 )
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,undefined")
+
 add_executable(Platform ${SOURCES})
 
 target_include_directories(Platform
