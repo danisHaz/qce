@@ -23,10 +23,8 @@ namespace qce {
         QubitEnv(const Qubit& qubit);
         QubitEnv(std::size_t qubitNumber, Qubit initialState = zero_basis_state);
 
-        /**
-         * Section with common gates
-        */
-        
+        // Section with common gates
+
         /**
          * Default Hadamard gate
         */
@@ -78,7 +76,10 @@ namespace qce {
         */
         void cfredkin();
 
+        // Common gates section end
+
         void compute();
+        
 
         qce::Qubit getQubit(unsigned qubitIndex) const;
     };

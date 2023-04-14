@@ -16,7 +16,7 @@ int main() {
     std::unique_ptr<qce::QubitEnv> env(new qce::QubitEnv(qv));
     std::unique_ptr<qce::operations::SwapGate> o = std::make_unique<qce::operations::SwapGate>(nullptr, qvIndices);
 
-    std::shared_ptr<qce::operations::OperationResultHolder<qce::TwoQubitMat_t>> result = o->constructOperation();
-    std::cout << (*result->result) * fqbit.getState() << "\n";
+    // std::shared_ptr<qce::operations::OperationResultHolder<qce::TwoQubitMat_t>> result = o->constructOperation();
+    // std::cout << (*result->result) * fqbit.getState() << "\n";
     return 0;
 }

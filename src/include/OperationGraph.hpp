@@ -3,6 +3,7 @@
 #include <QubitEnv.hpp>
 #include <vector>
 #include <memory>
+#include <Exceptions.h>
 
 namespace qce {
 namespace operations {
@@ -23,6 +24,10 @@ namespace operations {
         }
     };
 
+    /**
+     * Class for operation node in graph of operations.
+     * Instance of this class contains information how to construct typical operation, e.g. gate.
+    */
     template<typename data_t, typename oper_signature_t, typename oper_result_t>
     class Operation {
 
@@ -34,42 +39,51 @@ namespace operations {
         
         public:
         Operation(std::shared_ptr<data_t> data): data{data} {}
+        Operation(const Operation &operation) {
+            *this->data = *operation->data;
+        }
 
         virtual std::shared_ptr<oper_result_t> constructOperation() = 0;
     };
 
-    template<typename T>
-    class SingleQubitOperation : public Operation<T, unsigned, OperationResultHolder<qce::QubitMat_t>> {
+    template<typename data_t, typename oper_signature_t, typename oper_result_t, typename matrix_t>
+    class QubitOperation : public Operation<data_t, oper_signature_t, oper_result_t> {
         protected:
-        unsigned qubitIndex;
-        std::shared_ptr<QubitMat_t> opMatr;
+        oper_signature_t qubitInds;
+        std::shared_ptr<matrix_t> opMatr;
+
+        public:
+        QubitOperation(std::shared_ptr<data_t> data, const oper_signature_t &qubitInds, const matrix_t &opMatr):
+            Operation<data_t, oper_signature_t, oper_result_t>(data) {
+            
+            this->qubitInds = oper_signature_t(qubitInds);
+            this->opMatr = std::make_shared<matrix_t>(opMatr);
+        }
+
+    };
+
+    template<typename T>
+    class SingleQubitOperation : public QubitOperation<T, unsigned, OperationResultHolder<qce::QubitMat_t>, qce::QubitMat_t> {
 
         public:
         SingleQubitOperation(std::shared_ptr<T> data, unsigned qubitIndex, const QubitMat_t &opMatr):
-            Operation<T, unsigned, OperationResultHolder<qce::QubitMat_t>>(data), qubitIndex{qubitIndex} {
-            this->opMatr = std::make_shared<QubitMat_t>(opMatr);
-        }
+            QubitOperation<T, unsigned, OperationResultHolder<qce::QubitMat_t>, qce::QubitMat_t>(data, qubitIndex, opMatr) {}
 
-        virtual std::shared_ptr<OperationResultHolder<QubitMat_t>> constructOperation() {
-            std::vector<unsigned> index = {this->qubitIndex};
-            return std::make_shared<OperationResultHolder<QubitMat_t>>(index, opMatr);
+        std::shared_ptr<OperationResultHolder<QubitMat_t>> constructOperation() override {
+            std::vector<unsigned> index = {this->qubitInds};
+            return std::make_shared<OperationResultHolder<QubitMat_t>>(index, this->opMatr);
         }
     };
 
     template<typename data_t, typename matrix_t>
-    class MultipleQubitOperation : public Operation<data_t, std::vector<unsigned>, OperationResultHolder<matrix_t>> {
-        protected:
-        std::vector<unsigned> qubitIndices;
-        std::shared_ptr<matrix_t> opMatr;
+    class MultipleQubitOperation : public QubitOperation<data_t, std::vector<unsigned>, OperationResultHolder<matrix_t>, matrix_t> {
 
         public:
-        MultipleQubitOperation(std::shared_ptr<data_t> data, const std::vector<unsigned> &qubitIndices, const matrix_t &opMatr): Operation<data_t, std::vector<unsigned>, OperationResultHolder<matrix_t>>(data) {
-            this->opMatr = std::make_shared<matrix_t>(opMatr);
-            this->qubitIndices = std::vector<unsigned>(qubitIndices);
-        }
+        MultipleQubitOperation(std::shared_ptr<data_t> data, const std::vector<unsigned> &qubitIndices, const matrix_t &opMatr):
+            QubitOperation<data_t, std::vector<unsigned>, OperationResultHolder<matrix_t>, matrix_t>(data, qubitIndices, opMatr) {}
 
-        virtual std::shared_ptr<OperationResultHolder<matrix_t>> constructOperation() override {
-            return std::make_shared<OperationResultHolder<matrix_t>>(qubitIndices, opMatr);
+        std::shared_ptr<OperationResultHolder<matrix_t>> constructOperation() override {
+            return std::make_shared<OperationResultHolder<matrix_t>>(this->qubitInds, this->opMatr);
         } 
     };
 
@@ -114,6 +128,20 @@ namespace operations {
     };
     
     // three qubit operations
+
+    class OperationGraph {
+        std::vector<qce::QubitStateT> initialQubitStates;
+
+        public:
+        void clear();
+
+        template<typename data_t, typename oper_signature_t, typename oper_result_t>
+        void addNode(Operation<data_t, oper_signature_t, oper_result_t> operation, unsigned qubitIndex) {
+            throw NOT_IMPLEMENTED_ERROR_CODE;
+        }
+
+        void compute();
+    };
 
 } // namespace operations
 } // namespace qce
