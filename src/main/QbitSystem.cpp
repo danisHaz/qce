@@ -19,12 +19,12 @@ int main() {
 
     qce::QubitVector v;
     v.add(qce::plus_basis_state);
-    v.add(qce::plus_basis_state);
     v.add(qce::zero_basis_state);
+    // v.add(qce::zero_basis_state);
 
     std::cout << *v.getState() << "\n";
 
-    // std::shared_ptr<qce::operations::OperationResultHolder<qce::TwoQubitMat_t>> result = o->constructOperation();
-    // std::cout << (*result->result) * fqbit.getState() << "\n";
+    std::shared_ptr<qce::operations::OperationResultHolder<qce::TwoQubitMat_t>> result = o->constructOperation();
+    std::cout << (*result->result) * (*v.getState()).transpose() << "\n";
     return 0;
 }

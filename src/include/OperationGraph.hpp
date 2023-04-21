@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <Exceptions.h>
+#include "QubitVector.hpp"
 
 namespace qce {
 namespace operations {
@@ -130,7 +131,7 @@ namespace operations {
     // three qubit operations
 
     class OperationGraph {
-        std::vector<qce::Qubit> initialQubits;
+        QubitVector initialQubits;
 
         public:
         OperationGraph() {
@@ -146,7 +147,9 @@ namespace operations {
             throw NOT_IMPLEMENTED_ERROR_CODE;
         }
 
-        void compute();
+        void addQubit(const Qubit& q) {
+            initialQubits.add(q);
+        }
     };
 
 } // namespace operations

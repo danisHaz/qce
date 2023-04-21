@@ -3,8 +3,14 @@
 #include <complex>
 #include "Qbit.h"
 #include <Eigen/Dense>
+#include <cmath>
+#include "Exceptions.h"
 
 qce::Qubit::Qubit(std::complex<double> first, std::complex<double> second) {
+    if (abs((first * first + second * second) - std::complex<double>(1, 0)) != std::complex<double>(0, 0)) {
+        throw QUBIT_ENV_ERROR_CODE;
+    }
+
     this->state = Eigen::Array2cd(first, second);
 }
 

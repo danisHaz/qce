@@ -33,7 +33,7 @@ namespace qce {
 
         QubitVector(unsigned qubitsCount, const qce::Qubit& inititalize_with) {
             qubits.reserve(qubitsCount);
-            
+
             for (std::size_t i = 0; i < qubitsCount; i++) {
                 qubits.emplace_back(Qubit(inititalize_with));
             }
@@ -63,5 +63,4 @@ namespace qce {
         }
 
     };
-
 } // qce
