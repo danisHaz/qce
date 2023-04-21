@@ -13,7 +13,7 @@ namespace qce {
 namespace qubitconsts {
 using namespace std::complex_literals;
 
-const float _RSQRROOT_OF_2 = utils::quicksqrt(2);
+const float _RSQRROOT_OF_2 = 1 / sqrt(2);
 
 const QubitState zero_basis_state = qce::QubitState(1, 0);
 const QubitState one_basis_state = qce::QubitState(0, 1);

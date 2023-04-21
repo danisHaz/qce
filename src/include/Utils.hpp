@@ -20,4 +20,4 @@ namespace utils {
             return q * q;
         }
     }
-}
+} // utils

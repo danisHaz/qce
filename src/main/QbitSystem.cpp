@@ -18,7 +18,7 @@ int main() {
     std::unique_ptr<qce::operations::SwapGate> o = std::make_unique<qce::operations::SwapGate>(nullptr, qvIndices);
 
     qce::QubitVector v;
-    v.add(qce::zero_basis_state);
+    v.add(qce::plus_basis_state);
     v.add(qce::plus_basis_state);
     v.add(qce::zero_basis_state);
 
