@@ -130,10 +130,16 @@ namespace operations {
     // three qubit operations
 
     class OperationGraph {
-        std::vector<qce::QubitStateT> initialQubitStates;
+        std::vector<qce::Qubit> initialQubits;
 
         public:
-        void clear();
+        OperationGraph() {
+            throw NOT_IMPLEMENTED_ERROR_CODE;
+        }
+
+        void clear() {
+            initialQubits.clear();
+        }
 
         template<typename data_t, typename oper_signature_t, typename oper_result_t>
         void addNode(Operation<data_t, oper_signature_t, oper_result_t> operation, unsigned qubitIndex) {
