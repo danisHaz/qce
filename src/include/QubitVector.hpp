@@ -6,32 +6,45 @@
 #include <memory>
 #include <cmath>
 #include "Utils.hpp"
+#include <exception>
 
 namespace qce {
 
-    class QubitVector {
-        typedef Eigen::Matrix<std::complex<double>, 1, Eigen::Dynamic> MultipleQubitState;
+    typedef Eigen::Matrix<std::complex<double>, 1, Eigen::Dynamic> MultipleQubitState;
 
+    class QubitVector {
+        protected:
         std::vector<Qubit> qubits;
+        virtual void constructState(std::shared_ptr<MultipleQubitState>, std::complex<double> p,
+            unsigned qubitStatePosition, unsigned index) = 0;
+
+        public:
+        virtual std::shared_ptr<MultipleQubitState> getState() = 0;
+        virtual std::shared_ptr<MultipleQubitState> getState(const std::vector<unsigned>&) = 0;
+        virtual void add(const Qubit& q) = 0;
+        virtual void clear() = 0;
+    };
+
+    class SimpleQubitVector : public QubitVector {
 
         void constructState(std::shared_ptr<MultipleQubitState> vState, std::complex<double> p, unsigned qubitStatePosition, unsigned index) {
-            if (index + 1 == qubits.size()) {
+            if (index + 1 == this->qubits.size()) {
                 unsigned zeroPosition = (qubitStatePosition << 1);
                 unsigned onePosition = (qubitStatePosition << 1) + 1;
-                (*vState)[zeroPosition] = p * qubits[index].getState()[0];
-                (*vState)[onePosition] = p * qubits[index].getState()[1];
+                (*vState)[zeroPosition] = p * this->qubits[index].getState()[0];
+                (*vState)[onePosition] = p * this->qubits[index].getState()[1];
                 return;
             }
 
-            constructState(vState, p * qubits[index].getState()[0], qubitStatePosition << 1, index+1);
-            constructState(vState, p * qubits[index].getState()[1], (qubitStatePosition << 1) + 1, index+1);
+            constructState(vState, p * this->qubits[index].getState()[0], qubitStatePosition << 1, index+1);
+            constructState(vState, p * this->qubits[index].getState()[1], (qubitStatePosition << 1) + 1, index+1);
         }
 
         public:
 
-        QubitVector() {}
+        SimpleQubitVector() {}
 
-        QubitVector(unsigned qubitsCount, const qce::Qubit& inititalize_with) {
+        SimpleQubitVector(unsigned qubitsCount, const qce::Qubit& inititalize_with) {
             qubits.reserve(qubitsCount);
 
             for (std::size_t i = 0; i < qubitsCount; i++) {
@@ -39,11 +52,11 @@ namespace qce {
             }
         }
 
-        QubitVector(const std::vector<Qubit>& qubits) {
+        SimpleQubitVector(const std::vector<Qubit>& qubits) {
             this->qubits = std::vector<Qubit>(qubits);
         }
 
-        std::shared_ptr<MultipleQubitState> getState() {
+        std::shared_ptr<MultipleQubitState> getState() override {
             if (qubits.size() == 0) {
                 return std::make_shared<MultipleQubitState>(0);
             }
@@ -55,10 +68,33 @@ namespace qce {
 
             return qubitsState;
         }
-        void add(const Qubit& q) {
+
+        std::shared_ptr<MultipleQubitState> getState(const std::vector<unsigned>& qubitIndices) override {
+            if (qubitIndices.size() == 0) {
+                return std::make_shared<MultipleQubitState>(0);
+            }
+            
+            std::vector<Qubit> qset;
+
+            for (std::size_t i = 0; i < qubitIndices.size(); i++) {
+                if (qubitIndices[i] >= this->qubits.size()) {
+                    throw std::invalid_argument("Provided index of chosen qubit is invalid");
+                }
+
+                qset.push_back(this->qubits[qubitIndices[i]]);
+            }
+
+            std::shared_ptr<MultipleQubitState> qubitsState = std::make_shared<MultipleQubitState>(
+                utils::binpow<std::uint64_t, unsigned>(2, qubits.size())
+            );
+
+            throw NOT_IMPLEMENTED_ERROR_CODE;
+        }
+
+        void add(const Qubit& q) override {
             qubits.push_back(Qubit(q));
         }
-        void clear() {
+        void clear() override {
             qubits.clear();
         }
 

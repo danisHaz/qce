@@ -25,12 +25,17 @@ namespace operations {
         }
     };
 
+    template<typename vector_t>
+    class BaseOperation {
+        virtual std::shared_ptr<vector_t> applyOperation(const vector_t &state) = 0;
+    };
+
     /**
      * Class for operation node in graph of operations.
      * Instance of this class contains information how to construct typical operation, e.g. gate.
     */
     template<typename data_t, typename oper_signature_t, typename oper_result_t>
-    class Operation {
+    class Operation : public BaseOperation<DynamicQubitState> {
 
         // typedef std::function<oper_result_t*(oper_signature_t)> oper_t;
         
@@ -74,6 +79,13 @@ namespace operations {
             std::vector<unsigned> index = {this->qubitInds};
             return std::make_shared<OperationResultHolder<QubitMat_t>>(index, this->opMatr);
         }
+
+        std::shared_ptr<QubitState> applyOperation(const QubitState &state) {
+            QubitState tempState = QubitState(state);
+            OperationResultHolder<QubitMat_t> operation = *constructOperation();
+            QubitState result = (*operation.result) * tempState;
+            return std::make_shared<QubitState>(result);
+        }
     };
 
     template<typename data_t, typename matrix_t>
@@ -85,7 +97,14 @@ namespace operations {
 
         std::shared_ptr<OperationResultHolder<matrix_t>> constructOperation() override {
             return std::make_shared<OperationResultHolder<matrix_t>>(this->qubitInds, this->opMatr);
-        } 
+        }
+
+        std::shared_ptr<DynamicQubitState> applyOperation(const DynamicQubitState &state) {
+            DynamicQubitState tempState = DynamicQubitState(state);
+            OperationResultHolder<matrix_t> operation = *constructOperation();
+            DynamicQubitState result = (*operation.result) * tempState;
+            return std::make_shared<DynamicQubitState>(result);
+        }
     };
 
     // single qubit operations
@@ -131,15 +150,20 @@ namespace operations {
     // three qubit operations
 
     class OperationGraph {
-        QubitVector initialQubits;
+        std::shared_ptr<std::vector<Qubit>> initialQubits;
+        std::vector<std::vector<BaseOperation<DynamicQubitState>>> graph;
 
         public:
         OperationGraph() {
-            throw NOT_IMPLEMENTED_ERROR_CODE;
+            this->initialQubits = std::make_shared<std::vector<Qubit>>();
+        }
+
+        OperationGraph(unsigned initialQubitCount) {
+            this->initialQubits = std::make_shared<std::vector<Qubit>>(initialQubitCount, zero_basis_state);
         }
 
         void clear() {
-            initialQubits.clear();
+            initialQubits->clear();
         }
 
         template<typename data_t, typename oper_signature_t, typename oper_result_t>
@@ -148,7 +172,11 @@ namespace operations {
         }
 
         void addQubit(const Qubit& q) {
-            initialQubits.add(q);
+            initialQubits->push_back(Qubit(q));
+        }
+
+        void addQubit(std::shared_ptr<Qubit> q) {
+            initialQubits->push_back(Qubit(q));
         }
     };
 

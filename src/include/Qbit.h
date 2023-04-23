@@ -5,6 +5,7 @@
 #include <Eigen/Dense>
 #include "Utils.hpp"
 #include <cmath>
+#include <memory>
 
 namespace qce {
 
@@ -14,6 +15,9 @@ namespace qce {
     typedef Eigen::Matrix<std::complex<double>, 2, 2> QubitMat_t;
     typedef Eigen::Matrix<std::complex<double>, 4, 4> TwoQubitMat_t;
     typedef Eigen::Matrix<std::complex<double>, 8, 8> ThreeQubitMat_t;
+
+    typedef Eigen::Matrix<std::complex<double>, Eigen::Dynamic, 1> DynamicQubitState;
+    typedef Eigen::Matrix<std::complex<double>, -1, -1> DynamicQubitMat_t;
 
     class Qubit {
         protected:
@@ -26,6 +30,7 @@ namespace qce {
         Qubit(const QubitState& otherState);
         Qubit(const Qubit& other);
         Qubit(std::complex<double> first, std::complex<double> second);
+        Qubit(std::shared_ptr<Qubit> qubitPtr);
 
         QubitState getState() const;
         void setState(const QubitState& newState);

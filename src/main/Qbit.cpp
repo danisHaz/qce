@@ -4,6 +4,7 @@
 #include "Qbit.h"
 #include <Eigen/Dense>
 #include <cmath>
+#include <memory>
 #include "Exceptions.h"
 
 qce::Qubit::Qubit(std::complex<double> first, std::complex<double> second) {
@@ -20,11 +21,15 @@ qce::Qubit::Qubit() {
 }
 
 qce::Qubit::Qubit(const Qubit& qubit) {
-    this->state = Eigen::Array2cd(qubit.state(0), qubit.state(1));
+    this->state = Eigen::Array2cd(qubit.state[0], qubit.state[1]);
 }
 
 qce::Qubit::Qubit(const qce::QubitState& otherState) {
-    this->state = qce::QubitState(otherState(0), otherState(1));
+    this->state = qce::QubitState(otherState[0], otherState[1]);
+}
+
+qce::Qubit::Qubit(std::shared_ptr<Qubit> qubitPtr) {
+    this->state = Eigen::Array2cd(qubitPtr->state[0], qubitPtr->state[1]);
 }
 
 qce::QubitStateT qce::Qubit::braState() const {
