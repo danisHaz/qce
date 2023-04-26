@@ -20,4 +20,15 @@ namespace utils {
             return q * q;
         }
     }
+
+    template<typename T>
+    const T integerLog(T n) {
+        int count = 0;
+        while (n > 0) {
+            n >>= 1;
+            ++count;
+        }
+
+        return (T)count;
+    }
 } // utils

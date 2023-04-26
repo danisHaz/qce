@@ -10,17 +10,37 @@
 
 namespace qce {
 
-    typedef Eigen::Matrix<std::complex<double>, 1, Eigen::Dynamic> MultipleQubitState;
+    /**
+     * MultipleQubitState: acts like a holder for different qubits in order to store their combined state after
+     * applying different gates to them.
+    */
+    class MultipleQubitState {
+        typedef Eigen::Matrix<std::complex<double>, Eigen::Dynamic, 1> QubitMatrix_t;
+        std::shared_ptr<QubitMatrix_t> state;
+        std::vector<unsigned> indices;
+
+        public:
+        MultipleQubitState(const std::vector<unsigned> &indices) {
+            this->indices = std::vector<unsigned>(indices);
+            std::uint64_t stateSize = utils::binpow<std::uint64_t, std::size_t>(2, indices.size());
+            state = std::make_shared<QubitMatrix_t>(stateSize);
+        }
+
+        std::shared_ptr<QubitMatrix_t> getState() {
+            return state;
+        }
+    };
 
     class QubitVector {
         protected:
-        std::vector<Qubit> qubits;
-        virtual void constructState(std::shared_ptr<MultipleQubitState>, std::complex<double> p,
+        std::vector<MultipleQubitState&> qubits; // acts like a vector of merged qubits
+ 
+        virtual void constructState(std::shared_ptr<MultipleQubitState> vState, std::complex<double> probability,
             unsigned qubitStatePosition, unsigned index) = 0;
 
         public:
         virtual std::shared_ptr<MultipleQubitState> getState() = 0;
-        virtual std::shared_ptr<MultipleQubitState> getState(const std::vector<unsigned>&) = 0;
+        virtual std::shared_ptr<MultipleQubitState> getState(const std::vector<unsigned>& qubitIndices) = 0;
         virtual void add(const Qubit& q) = 0;
         virtual void clear() = 0;
     };
