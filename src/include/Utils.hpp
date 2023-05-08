@@ -35,5 +35,15 @@ namespace utils {
         const Eigen::MatrixXcd &first,
         const Eigen::MatrixXcd &second
     );
+
+    /**
+     * Function for finding index number of value in iterator range. 
+    */
+    template<typename Iter>
+    std::size_t findIndex(Iter begin, Iter end, typename std::iterator_traits<Iter>::value_type &value) {
+        std::size_t ind = 0;
+        for (;begin != end && *begin != value; begin++, ind++);
+        return ind;
+    }
 } // utils
 } // qce

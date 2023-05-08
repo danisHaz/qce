@@ -23,6 +23,11 @@ namespace operations {
             this->result = result;
         }
 
+        OperationResultHolder(OperationResultHolder &&other) {
+            qubits = std::move(other.qubits);
+            result = other.result;
+        }
+
         ~OperationResultHolder() {
             this->qubits.clear();
         }
@@ -30,7 +35,7 @@ namespace operations {
 
     template<typename QubitState_t>
     class BaseOperation {
-        virtual std::shared_ptr<QubitState_t> applyOperation(
+        virtual QubitState_t applyOperation(
             const std::vector<QubitState_t> &states
         ) = 0;
     };
@@ -53,8 +58,8 @@ namespace operations {
             this->data = operation->data;
         }
 
-        virtual std::shared_ptr<oper_result_t> constructOperation() = 0;
-        virtual std::shared_ptr<QubitState_t> applyOperation(
+        virtual oper_result_t constructOperation() = 0;
+        virtual QubitState_t applyOperation(
             const std::vector<QubitState_t> &states
         ) = 0;
     };
@@ -83,31 +88,29 @@ namespace operations {
             return result;
         }
 
-        std::shared_ptr<DynamicQubitState> combineStates(
+        DynamicQubitState combineStates(
             const DynamicQubitState &first,
             const DynamicQubitState &second
         ) const {
             std::size_t resultSize = first.size() * second.size();
-            std::shared_ptr<DynamicQubitState> result =
-                std::make_shared<DynamicQubitState>(resultSize);
+            DynamicQubitState result(resultSize);
             
             for (std::size_t i = 0; i < first.size(); i++) {
                 for (std::size_t j = 0; j < second.size(); j++) {
-                    (*result)[(i<<1)+j] = first[i] * second[j];
+                    result[(i<<1)+j] = first[i] * second[j];
                 }
             }
 
             return result;
         }
 
-        std::shared_ptr<DynamicQubitState> combineStates(
+        DynamicQubitState combineStates(
             const std::vector<DynamicQubitState> &states
         ) {
-            std::shared_ptr<DynamicQubitState> result =
-                std::make_shared<DynamicQubitState>(states[0]);
+            DynamicQubitState result = states[0];
 
             for (std::size_t i = 1; i < states.size(); i++) {
-                result = combineStates(*result, states[i]);
+                result = combineStates(result, states[i]);
             }
 
             return result;
@@ -119,28 +122,24 @@ namespace operations {
             const std::vector<unsigned> &controlQubits,
             unsigned targetQubit,
             data_t &data = nullptr,
-            const std::string &operationName = nullptr
+            const std::string &operationName = ""
         ): Operation<data_t, oper_result_t, DynamicQubitState>(data), targetQubit(targetQubit) {
             this->controlQubits = std::vector<unsigned>(controlQubits);
             this->qubitNumber = QUBIT_NUMBER_UNDEFINED;
-            if (operationName != nullptr) {
+            if (operationName != "") {
                 this->operationName = operationName;
             }
         }
 
-        virtual std::shared_ptr<oper_result_t> constructOperation() = 0;
+        virtual oper_result_t constructOperation() = 0;
 
-        std::shared_ptr<DynamicQubitState> applyOperation(
+        DynamicQubitState applyOperation(
             const std::vector<DynamicQubitState> &states
         ) override {
-            this->qubitNumber = countQubitNumber(states);
-            std::shared_ptr<oper_result_t> operation = this->constructOperation();
-            std::shared_ptr<DynamicQubitState> combinedState = this->combineStates(states);
-
-            std::shared_ptr<DynamicQubitState> resultState =
-                std::make_shared<DynamicQubitState>((*operation->result) * (*combinedState));
-            
-            return resultState;
+            qubitNumber = countQubitNumber(states);
+            oper_result_t operation = constructOperation();
+            DynamicQubitState combinedState = combineStates(states);
+            return (*operation.result) * combinedState;
         }
     };
 
@@ -159,7 +158,7 @@ namespace operations {
             }
         }
 
-        std::shared_ptr<OperationResultHolder<DynamicQubitMat_t>> constructOperation() override {            
+        OperationResultHolder<DynamicQubitMat_t> constructOperation() override {            
             DynamicQubitMat_t result = Eigen::MatrixXcd::Identity(1, 1);
             
             for (std::size_t i = 0; i < data.size(); i++) {
@@ -167,7 +166,7 @@ namespace operations {
                 result = utils::kroneckerProduct(result, matrix);
             }
 
-            return std::make_shared<OperationResultHolder<DynamicQubitMat_t>>(
+            return OperationResultHolder<DynamicQubitMat_t>(
                 OperationResultHolder<DynamicQubitMat_t>(data, std::make_shared<DynamicQubitMat_t>(result))
             );
         }
@@ -224,8 +223,39 @@ namespace operations {
             const std::vector<unsigned> &qubitOrder
         ): QubitOperation(controlQubits, targetQubit, qubitOrder) {}
         
-        std::shared_ptr<OperationResultHolder<DynamicQubitMat_t>> constructOperation() override {
-            throw NOT_IMPLEMENTED_ERROR_CODE;
+        OperationResultHolder<DynamicQubitMat_t> constructOperation() override {
+            std::size_t n = data.size();
+            
+            // count target qubit's position in relation with qubit order
+            std::size_t targetQubitRelativePosition = utils::findIndex(data.begin(), data.end(), targetQubit);
+            std::size_t controlQubitRelativePosition = utils::findIndex(data.begin(), data.end(), controlQubits[0]);
+
+            // find power
+            std::size_t targetQubitNumber = (1 << (n-targetQubitRelativePosition-1));
+            std::size_t controlQubitNumber = (1 << (n-controlQubitRelativePosition-1));
+
+            // implement algorithm for swapping amplitudes for target and control
+            std::size_t resultMatrixSize = (1 << n);
+            DynamicQubitMat_t result = Eigen::MatrixXcd::Zero(resultMatrixSize, resultMatrixSize);
+
+            for (std::size_t i = 0; i < resultMatrixSize; i++) {
+                bool controlCheck = (i & controlQubitNumber) == 0;
+                bool targetCheck = (i & targetQubitNumber) == 0;
+
+                if (controlCheck) {
+                    result(i, i) = 1; continue;
+                }
+
+                if (!targetCheck) {
+                    // means that this is an amplitude for |..1..1..> state
+                    // change to |..1..0..> (|..0..1..>)
+                    result(i, i-targetQubitNumber) = 1;
+                } else {
+                    result(i, i+targetQubitNumber) = 1;
+                }
+            }
+
+            return OperationResultHolder<DynamicQubitMat_t>(data, std::make_shared<DynamicQubitMat_t>(result));
         }
     };
     class SwapGate : public QubitOperation<const std::vector<unsigned>, OperationResultHolder<DynamicQubitMat_t>> {
@@ -236,7 +266,7 @@ namespace operations {
             const std::vector<unsigned> &qubitOrder
         ): QubitOperation(controlQubits, targetQubit, qubitOrder) {}
         
-        std::shared_ptr<OperationResultHolder<DynamicQubitMat_t>> constructOperation() override {
+        OperationResultHolder<DynamicQubitMat_t> constructOperation() override {
             throw NOT_IMPLEMENTED_ERROR_CODE;
         }
     };
@@ -248,7 +278,7 @@ namespace operations {
             const std::vector<unsigned> &qubitOrder
         ): QubitOperation(controlQubits, targetQubit, qubitOrder) {}
         
-        std::shared_ptr<OperationResultHolder<DynamicQubitMat_t>> constructOperation() override {
+        OperationResultHolder<DynamicQubitMat_t> constructOperation() override {
             throw NOT_IMPLEMENTED_ERROR_CODE;
         }
     };
@@ -260,7 +290,7 @@ namespace operations {
             const std::vector<unsigned> &qubitOrder
         ): QubitOperation(controlQubits, targetQubit, qubitOrder) {}
         
-        std::shared_ptr<OperationResultHolder<DynamicQubitMat_t>> constructOperation() override {
+        OperationResultHolder<DynamicQubitMat_t> constructOperation() override {
             throw NOT_IMPLEMENTED_ERROR_CODE;
         }
     };

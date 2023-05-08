@@ -11,5 +11,9 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 .vscode/
+DartConfiguration.tcl
 Platform
+GatesTest
+Test
+UtilsTest
 src/libs/Eigen

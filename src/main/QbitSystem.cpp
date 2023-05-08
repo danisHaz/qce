@@ -13,12 +13,15 @@ int main() {
     std::vector<unsigned> qvIndices = {0, 1};
 
     std::vector<unsigned> qubitPositions = {0, 1, 2};
-    std::vector<unsigned> controlQubits;
-    qce::operations::XGate gate(controlQubits, 0, qubitPositions);
+    std::vector<unsigned> controlQubits = {0};
+    qce::operations::CnotGate gate(controlQubits, 1, qubitPositions);
 
-    qce::DynamicQubitState state = (qce::DynamicQubitState(8) << 0,0,0,0,0,0,0,0).finished();
+    qce::DynamicQubitState state = (qce::DynamicQubitState(8) << 0,0,0,0,1,0,0,0).finished();
 
-    std::cout << (*gate.constructOperation()->result) * state << "\n";
+    auto operation = gate.constructOperation();
+    std::cout << *operation.result << "\n";
+
+    std::cout << (*operation.result) * state << "\n";
 
     return 0;
 }
