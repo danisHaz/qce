@@ -1,11 +1,10 @@
 #pragma once
 
-namespace utils {
+#include <memory>
+#include <Eigen/Eigen>
 
-    /**
-     * Fast square root algorithm (Quake III)
-    */
-    float quicksqrt(float number);
+namespace qce { 
+namespace utils {
 
     template<typename base_t, typename power_t>
     base_t binpow(base_t x, power_t y) {
@@ -31,4 +30,10 @@ namespace utils {
 
         return (T)count;
     }
+
+    Eigen::MatrixXcd kroneckerProduct(
+        const Eigen::MatrixXcd &first,
+        const Eigen::MatrixXcd &second
+    );
 } // utils
+} // qce

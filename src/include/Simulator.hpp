@@ -12,9 +12,8 @@ namespace simulator {
 
     class Simulator {
         
-
         public:
-        virtual Solution construcSolution(std::weak_ptr<qce::operations::OperationGraph> graph) = 0;
+        virtual Solution constructSolution(std::weak_ptr<qce::operations::OperationGraph> graph) = 0;
     };
 
     class SimpleSimulator : public Simulator {

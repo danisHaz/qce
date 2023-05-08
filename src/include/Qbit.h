@@ -17,8 +17,7 @@ namespace qce {
     typedef Eigen::Matrix<std::complex<double>, 8, 8> ThreeQubitMat_t;
 
     typedef Eigen::Matrix<std::complex<double>, Eigen::Dynamic, 1> DynamicQubitState;
-    typedef Eigen::Matrix<std::complex<double>, -1, -1> DynamicQubitMat_t;
-
+    typedef Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> DynamicQubitMat_t;
     class Qubit {
         protected:
 
@@ -59,6 +58,7 @@ namespace qce {
     const QubitState plusi_basis_state = (qce::QubitState(1, 1i) * _RSQRROOT_OF_2);
     const QubitState minusi_basis_state = (qce::QubitState(1, -1i) * _RSQRROOT_OF_2);
 
+    const QubitMat_t identity = Eigen::MatrixXd::Identity(2, 2);
     const QubitMat_t hadamard_gate = (_RSQRROOT_OF_2 * (qce::QubitMat_t() << 1,1,1,-1).finished());
     const QubitMat_t pauli_z_gate = (qce::QubitMat_t() << 1,0,0,-1).finished();
     const QubitMat_t pauli_y_gate = (qce::QubitMat_t() << 0,-1i,1i,0).finished();

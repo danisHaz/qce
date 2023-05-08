@@ -1,16 +1,18 @@
 #include "Utils.hpp"
 
-float utils::quicksqrt(float number) {
-    long i;
-    float x2, y;
-    const float threehalfs = 1.5;
+Eigen::MatrixXcd qce::utils::kroneckerProduct(
+    const Eigen::MatrixXcd &first,
+    const Eigen::MatrixXcd &second
+) {
+    const std::size_t resultRows = first.rows() * second.rows();
+    const std::size_t resultCols = first.cols() * second.cols();
 
-    x2 = number * 0.5;
-    y  = number;
-    i  = * ( long * ) &y;
-    i  = 0x5f3759df - ( i >> 1 );
-    y  = * ( float * ) &i;
-    y  = y * ( threehalfs - ( x2 * y * y ) );
+    Eigen::MatrixXcd result(resultRows, resultCols);
+    for (unsigned i = 0; i < first.rows(); i++) {
+        for (unsigned j = 0; j < first.cols(); j++) {
+            result.block(i*second.rows(), j*second.cols(), second.rows(), second.cols()) = first(i,j) * second;
+        }
+    }
 
-    return y;
+    return result;
 }

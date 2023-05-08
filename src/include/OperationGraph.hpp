@@ -3,8 +3,11 @@
 #include <QubitEnv.hpp>
 #include <vector>
 #include <memory>
+#include <cassert>
 #include <Exceptions.h>
+#include <iostream>
 #include "QubitVector.hpp"
+#include "Utils.hpp"
 
 namespace qce {
 namespace operations {
@@ -27,38 +30,46 @@ namespace operations {
 
     template<typename QubitState_t>
     class BaseOperation {
-        virtual std::shared_ptr<QubitState_t> applyOperation() = 0;
+        virtual std::shared_ptr<QubitState_t> applyOperation(
+            const std::vector<QubitState_t> &states
+        ) = 0;
     };
 
     /**
      * Class for operation node in graph of operations.
      * Instance of this class contains information how to construct typical operation, e.g. gate.
     */
-    template<typename data_t, typename oper_result_t>
+    template<typename data_t, typename oper_result_t, typename QubitState_t>
     class Operation : public BaseOperation<DynamicQubitState> {
 
         // typedef std::function<oper_result_t*(oper_signature_t)> oper_t;
         
         protected:
-        std::shared_ptr<data_t> data;
-        // oper_t *oper;
+        data_t &data;
         
         public:
-        Operation(std::shared_ptr<data_t> data): data{data} {}
+        Operation(data_t &data): data{data} {}
         Operation(const Operation &operation) {
             this->data = operation->data;
         }
 
         virtual std::shared_ptr<oper_result_t> constructOperation() = 0;
-        virtual std::shared_ptr<DynamicQubitState> applyOperation() = 0;
+        virtual std::shared_ptr<QubitState_t> applyOperation(
+            const std::vector<QubitState_t> &states
+        ) = 0;
     };
 
     template<typename data_t, typename oper_result_t>
-    class QubitOperation : public Operation<data_t, oper_result_t> {
+    class QubitOperation : public Operation<data_t, oper_result_t, DynamicQubitState> {
+        
+        #ifndef QUBIT_NUMBER_UNDEFINED
+            #define QUBIT_NUMBER_UNDEFINED 0
+        #endif
+
         protected:
         std::vector<unsigned> controlQubits;
+        unsigned targetQubit;
         unsigned qubitNumber;
-        std::shared_ptr<std::vector<DynamicQubitState>> qubitStates;
 
         unsigned countQubitNumber(const std::vector<DynamicQubitState> &qubitStates) {
             unsigned result = 0;
@@ -103,116 +114,232 @@ namespace operations {
         }
 
         public:
+        std::string operationName = "QubitOperation";
         QubitOperation(
-            const std::vector<DynamicQubitState> &qubitStates,
             const std::vector<unsigned> &controlQubits,
-            std::shared_ptr<data_t> data = nullptr
-        ): Operation<data_t, oper_result_t>(data) {
-            
-            this-qubitStates = std::make_shared(qubitStates);
-            this-controlQubits = std::vector<unsigned>(controlQubits);
-            this->qubitNumber = countQubitNumber(qubitStates);
+            unsigned targetQubit,
+            data_t &data = nullptr,
+            const std::string &operationName = nullptr
+        ): Operation<data_t, oper_result_t, DynamicQubitState>(data), targetQubit(targetQubit) {
+            this->controlQubits = std::vector<unsigned>(controlQubits);
+            this->qubitNumber = QUBIT_NUMBER_UNDEFINED;
+            if (operationName != nullptr) {
+                this->operationName = operationName;
+            }
         }
 
         virtual std::shared_ptr<oper_result_t> constructOperation() = 0;
-        virtual std::shared_ptr<DynamicQubitState> applyOperation() = 0;
+
+        std::shared_ptr<DynamicQubitState> applyOperation(
+            const std::vector<DynamicQubitState> &states
+        ) override {
+            this->qubitNumber = countQubitNumber(states);
+            std::shared_ptr<oper_result_t> operation = this->constructOperation();
+            std::shared_ptr<DynamicQubitState> combinedState = this->combineStates(states);
+
+            std::shared_ptr<DynamicQubitState> resultState =
+                std::make_shared<DynamicQubitState>((*operation->result) * (*combinedState));
+            
+            return resultState;
+        }
     };
 
-    template<typename T>
-    class SingleQubitOperation : public QubitOperation<T, OperationResultHolder<QubitMat_t>> {
-
+    class SingleQubitOperation : public QubitOperation<const std::vector<unsigned>, OperationResultHolder<DynamicQubitMat_t>> {    
+        const qce::QubitMat_t &singleOperationMatrix;
         public:
         SingleQubitOperation(
-            const std::vector<DynamicQubitState> &qubitStates,
             const std::vector<unsigned> &controlQubits,
-            std::shared_ptr<T> data = nullptr
-        ): QubitOperation<T, OperationResultHolder<QubitMat_t>>(qubitStates, controlQubits, data) {}
-
-        virtual std::shared_ptr<OperationResultHolder<QubitMat_t>> constructOperation() = 0;
-
-        std::shared_ptr<DynamicQubitState> applyOperation() override {
-            std::shared_ptr<OperationResultHolder<QubitMat_t>> operation = this->constructOperation();
-            unsigned resultStateSize = 1;
-            for (const DynamicQubitState &qs: qubitStates) {
-                resultState += qs.size();
+            unsigned targetQubit,
+            const std::vector<unsigned> &qubitOrder,
+            const qce::QubitMat_t &singleOperationMatrix,
+            const std::string &operationName = nullptr
+        ): QubitOperation(controlQubits, targetQubit, qubitOrder, operationName), singleOperationMatrix{singleOperationMatrix} {
+            if (!controlQubits.empty()) {
+                throw new std::invalid_argument("Provided control qubits to " + operationName + " gate");
             }
-            std::unique_ptr<DynamicQubitState> resultState = std::make_unique<DynamicQubitState>()
+        }
 
-            // QubitState tempState = QubitState(state);
-            // OperationResultHolder<QubitMat_t> operation = *(constructOperation());
-            // QubitState result = (*operation.result) * tempState;
-            // return std::make_shared<QubitState>(result);
+        std::shared_ptr<OperationResultHolder<DynamicQubitMat_t>> constructOperation() override {            
+            DynamicQubitMat_t result = Eigen::MatrixXcd::Identity(1, 1);
+            
+            for (std::size_t i = 0; i < data.size(); i++) {
+                DynamicQubitMat_t matrix = (i == targetQubit ? singleOperationMatrix : identity);
+                result = utils::kroneckerProduct(result, matrix);
+            }
+
+            return std::make_shared<OperationResultHolder<DynamicQubitMat_t>>(
+                OperationResultHolder<DynamicQubitMat_t>(data, std::make_shared<DynamicQubitMat_t>(result))
+            );
         }
     };
-
-    template<typename data_t, typename matrix_t>
-    class MultipleQubitOperation : public QubitOperation<data_t, std::vector<unsigned>, OperationResultHolder<matrix_t>, matrix_t> {
-
-        public:
-        MultipleQubitOperation(std::shared_ptr<data_t> data, const std::vector<unsigned> &qubitIndices, const matrix_t &opMatr):
-            QubitOperation<data_t, std::vector<unsigned>, OperationResultHolder<matrix_t>, matrix_t>(data, qubitIndices, opMatr) {}
-
-        virtual std::shared_ptr<OperationResultHolder<matrix_t>> constructOperation(
-            const std::vector<DynamicQubitState> &qubitStates,
-            const std::vector<unsigned> &controlQubits
-        ) = 0;
-
-        std::shared_ptr<DynamicQubitState> applyOperation(const DynamicQubitState &state) override {
-            DynamicQubitState tempState = DynamicQubitState(state);
-            OperationResultHolder<matrix_t> operation = *constructOperation();
-            DynamicQubitState result = (*operation.result) * tempState;
-            return std::make_shared<DynamicQubitState>(result);
-        }
-    };
-
     // single qubit operations
-    class HadamardGate : public SingleQubitOperation<void> {
-        protected:
-        
-
+    class HadamardGate : public SingleQubitOperation {    
         public:
-        HadamardGate(std::shared_ptr<void> data, unsigned qubitIndex): SingleQubitOperation(data, qubitIndex, hadamard_gate) {}
+        HadamardGate(
+            const std::vector<unsigned> &controlQubits,
+            unsigned targetQubit,
+            const std::vector<unsigned> &qubitOrder
+        ): SingleQubitOperation(controlQubits, targetQubit, qubitOrder, hadamard_gate, "Hadamard gate") {}
     };
-    class XGate : public SingleQubitOperation<void> {
+    class XGate : public SingleQubitOperation {
         public:
-        XGate(std::shared_ptr<void> data, unsigned qubitIndex): SingleQubitOperation(data, qubitIndex, pauli_x_gate) {}
+        XGate(
+            const std::vector<unsigned> &controlQubits,
+            unsigned targetQubit,
+            const std::vector<unsigned> &qubitOrder
+        ): SingleQubitOperation(controlQubits, targetQubit, qubitOrder, pauli_x_gate, "X gate") {}
     };
-    class YGate : public SingleQubitOperation<void> {
+    class YGate : public SingleQubitOperation {
         public:
-        YGate(std::shared_ptr<void> data, unsigned qubitIndex): SingleQubitOperation(data, qubitIndex, pauli_y_gate) {}
+        YGate(
+            const std::vector<unsigned> &controlQubits,
+            unsigned targetQubit,
+            const std::vector<unsigned> &qubitOrder
+        ): SingleQubitOperation(controlQubits, targetQubit, qubitOrder, pauli_y_gate, "Y gate") {}
     };
-    class ZGate : public SingleQubitOperation<void> {
+    class ZGate : public SingleQubitOperation {
         public:
-        ZGate(std::shared_ptr<void> data, unsigned qubitIndex): SingleQubitOperation(data, qubitIndex, pauli_z_gate) {}
+        ZGate(
+            const std::vector<unsigned> &controlQubits,
+            unsigned targetQubit,
+            const std::vector<unsigned> &qubitOrder
+        ): SingleQubitOperation(controlQubits, targetQubit, qubitOrder, pauli_z_gate, "Z gate") {}
     };
-    class PhaseGate : public SingleQubitOperation<void> {
+    class PhaseGate : public SingleQubitOperation {
         public:
-        PhaseGate(std::shared_ptr<void> data, unsigned qubitIndex): SingleQubitOperation(data, qubitIndex, phase_s_gate) {}
+        PhaseGate(
+            const std::vector<unsigned> &controlQubits,
+            unsigned targetQubit,
+            const std::vector<unsigned> &qubitOrder
+        ): SingleQubitOperation(controlQubits, targetQubit, qubitOrder, phase_s_gate, "S gate") {}
     };
 
     // two qubit operations
-    class CnotGate : public MultipleQubitOperation<void, TwoQubitMat_t> {
+
+    class CnotGate : public QubitOperation<const std::vector<unsigned>, OperationResultHolder<DynamicQubitMat_t>> {
         public:
-        CnotGate(std::shared_ptr<void> data, const std::vector<unsigned> &qubits): MultipleQubitOperation<void, TwoQubitMat_t>(data, qubits, cnot_gate) {}
+        CnotGate(
+            const std::vector<unsigned> &controlQubits,
+            unsigned targetQubit,
+            const std::vector<unsigned> &qubitOrder
+        ): QubitOperation(controlQubits, targetQubit, qubitOrder) {}
+        
+        std::shared_ptr<OperationResultHolder<DynamicQubitMat_t>> constructOperation() override {
+            throw NOT_IMPLEMENTED_ERROR_CODE;
+        }
     };
-    class SwapGate : public MultipleQubitOperation<void, TwoQubitMat_t> {
+    class SwapGate : public QubitOperation<const std::vector<unsigned>, OperationResultHolder<DynamicQubitMat_t>> {
         public:
-        SwapGate(std::shared_ptr<void> data, const std::vector<unsigned> &qubits): MultipleQubitOperation<void, TwoQubitMat_t>(data, qubits, swap_gate) {}
+        SwapGate(
+            const std::vector<unsigned> &controlQubits,
+            unsigned targetQubit,
+            const std::vector<unsigned> &qubitOrder
+        ): QubitOperation(controlQubits, targetQubit, qubitOrder) {}
+        
+        std::shared_ptr<OperationResultHolder<DynamicQubitMat_t>> constructOperation() override {
+            throw NOT_IMPLEMENTED_ERROR_CODE;
+        }
     };
-    class CZGate : public MultipleQubitOperation<void, TwoQubitMat_t> {
+    class CZGate : public QubitOperation<const std::vector<unsigned>, OperationResultHolder<DynamicQubitMat_t>> {
         public:
-        CZGate(std::shared_ptr<void> data, const std::vector<unsigned> &qubits): MultipleQubitOperation<void, TwoQubitMat_t>(data, qubits, cz_gate) {}
+        CZGate(
+            const std::vector<unsigned> &controlQubits,
+            unsigned targetQubit,
+            const std::vector<unsigned> &qubitOrder
+        ): QubitOperation(controlQubits, targetQubit, qubitOrder) {}
+        
+        std::shared_ptr<OperationResultHolder<DynamicQubitMat_t>> constructOperation() override {
+            throw NOT_IMPLEMENTED_ERROR_CODE;
+        }
     };
-    class CPhaseGate : public MultipleQubitOperation<void, TwoQubitMat_t> {
+    class CPhaseGate : public QubitOperation<const std::vector<unsigned>, OperationResultHolder<DynamicQubitMat_t>> {
         public:
-        CPhaseGate(std::shared_ptr<void> data, const std::vector<unsigned> &qubits): MultipleQubitOperation<void, TwoQubitMat_t>(data, qubits, cphase_gate) {}
+        CPhaseGate(
+            const std::vector<unsigned> &controlQubits,
+            unsigned targetQubit,
+            const std::vector<unsigned> &qubitOrder
+        ): QubitOperation(controlQubits, targetQubit, qubitOrder) {}
+        
+        std::shared_ptr<OperationResultHolder<DynamicQubitMat_t>> constructOperation() override {
+            throw NOT_IMPLEMENTED_ERROR_CODE;
+        }
     };
     
     // three qubit operations
 
+    template<typename NodeData_t>
+    class Node {
+
+        std::shared_ptr<NodeData_t> data;
+        std::vector<std::shared_ptr<Node<NodeData_t>>> children;
+
+        public:
+        Node(const Node &node) {
+            this->children = std::vector<std::shared_ptr<Node<NodeData_t>>>(node->children);
+        }
+
+        Node(const std::vector<std::shared_ptr<Node<NodeData_t>>> &nodes) {
+            this->children = std::vector<std::shared_ptr<Node<NodeData_t>>>(nodes);
+        }
+
+        Node(std::size_t childrenNodeCount, const Node<NodeData_t> &initNode) {
+            this->children.reserve(childrenNodeCount);
+
+            this->children.emplace_back(
+                std::make_shared<Node<NodeData_t>>(initNode)
+            );
+        }
+
+        Node(const NodeData_t& data) {
+            this->data = std::make_shared<NodeData_t>(data);
+        }
+
+        std::shared_ptr<NodeData_t> getData() {
+            return this->data;
+        }
+
+        bool hasNext(unsigned nextElementIndex=0) {
+            if (this->children.size() <= nextElementIndex) {
+                return false;
+            }
+
+            return true;
+        }
+
+        std::shared_ptr<Node<NodeData_t>> getNext(unsigned nextElementIndex=0) {
+            if (!hasNext(nextElementIndex)) {
+                
+            }
+        }
+    };
+
+    template<typename NodeData_t>
+    class Graph {
+
+        std::vector<std::shared_ptr<Node<NodeData_t>>> basicNodes, currentNodes;
+
+        public:
+        Graph(const std::vector<std::shared_ptr<Node<NodeData_t>>> &basicNodes) {
+            this->basicNodes = std::vector<std::shared_ptr<Node<NodeData_t>>>(basicNodes);
+
+        }
+
+        Graph(std::size_t nodesCount, const Node<NodeData_t> &initNode) {
+            this->basicNodes.reserve(nodesCount);
+
+            for (std::size_t i = 0; i < nodesCount; i++) {
+                this->basicNodes.emplace_back(
+                    std::make_shared<Node<NodeData_t>>(initNode)
+                );
+            }
+        }
+
+        virtual void add() = 0;
+    };
+
     class OperationGraph {
         std::shared_ptr<std::vector<Qubit>> initialQubits;
-        std::vector<std::vector<BaseOperation<DynamicQubitState>>> graph;
+        std::vector<std::vector<BaseOperation<OperationResultHolder<DynamicQubitState>>>> graph;
 
         public:
         OperationGraph() {
@@ -227,8 +354,7 @@ namespace operations {
             initialQubits->clear();
         }
 
-        template<typename data_t, typename oper_signature_t, typename oper_result_t>
-        void addNode(Operation<data_t, oper_signature_t, oper_result_t> operation, unsigned qubitIndex) {
+        void addNode(std::shared_ptr<BaseOperation<OperationResultHolder<DynamicQubitState>>> operation, unsigned qubitIndex) {
             throw NOT_IMPLEMENTED_ERROR_CODE;
         }
 

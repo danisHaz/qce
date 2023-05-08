@@ -11,6 +11,7 @@ set(SOURCES
 )
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,undefined")
+# target_compile_features(Platform PRIVATE 11)
 
 add_executable(Platform ${SOURCES})
 
