@@ -15,6 +15,8 @@ using namespace std::complex_literals;
 
 const float _RSQRROOT_OF_2 = 1 / sqrt(2);
 
+const QubitMat_t identity = QubitMat_t::Identity(2, 2);
+
 const QubitState zero_basis_state = qce::QubitState(1, 0);
 const QubitState one_basis_state = qce::QubitState(0, 1);
 const QubitState plus_basis_state = (qce::QubitState(1, 1) * _RSQRROOT_OF_2);

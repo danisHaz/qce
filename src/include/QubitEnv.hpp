@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Qbit.h"
+#include "QubitConsts.hpp"
 #include <Eigen/Dense>
 #include <vector>
 
@@ -21,7 +22,7 @@ namespace qce {
         QubitEnv();
         QubitEnv(const std::vector<Qubit>& vec);
         QubitEnv(const Qubit& qubit);
-        QubitEnv(std::size_t qubitNumber, Qubit initialState = zero_basis_state);
+        QubitEnv(std::size_t qubitNumber, Qubit initialState = qubitconsts::zero_basis_state);
 
         // Section with common gates
 

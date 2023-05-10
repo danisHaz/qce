@@ -55,8 +55,3 @@ void qce::Qubit::setState(const QubitState& newState) {
 qce::DMatrState qce::Qubit::getDensityMatrix() const {
     return this->ketState() * this->braState();
 }
-
-qce::PureQubit::PureQubit(std::complex<double> first, std::complex<double> second): Qubit(first, second) {}
-qce::PureQubit::PureQubit(): Qubit() {}
-qce::PureQubit::PureQubit(const PureQubit& qubit): Qubit(qubit) {}
-qce::PureQubit::PureQubit(const qce::QubitState& state): Qubit(state) {}

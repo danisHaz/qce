@@ -1,13 +1,14 @@
 #pragma once
 #include <functional>
-#include <QubitEnv.hpp>
 #include <vector>
 #include <memory>
 #include <cassert>
-#include <Exceptions.h>
 #include <iostream>
+#include "Exceptions.h"
+#include "QubitEnv.hpp"
 #include "QubitVector.hpp"
 #include "Utils.hpp"
+#include "QubitConsts.hpp"
 
 namespace qce {
 namespace operations {
@@ -162,7 +163,7 @@ namespace operations {
             DynamicQubitMat_t result = Eigen::MatrixXcd::Identity(1, 1);
             
             for (std::size_t i = 0; i < data.size(); i++) {
-                DynamicQubitMat_t matrix = (i == targetQubit ? singleOperationMatrix : identity);
+                DynamicQubitMat_t matrix = (i == targetQubit ? singleOperationMatrix : qubitconsts::identity);
                 result = qce::utils::kroneckerProduct(result, matrix);
             }
 
@@ -178,7 +179,7 @@ namespace operations {
             const std::vector<unsigned> &controlQubits,
             unsigned targetQubit,
             const std::vector<unsigned> &qubitOrder
-        ): SingleQubitOperation(controlQubits, targetQubit, qubitOrder, hadamard_gate, "Hadamard gate") {}
+        ): SingleQubitOperation(controlQubits, targetQubit, qubitOrder, qubitconsts::hadamard_gate, "Hadamard gate") {}
     };
     class XGate : public SingleQubitOperation {
         public:
@@ -186,7 +187,7 @@ namespace operations {
             const std::vector<unsigned> &controlQubits,
             unsigned targetQubit,
             const std::vector<unsigned> &qubitOrder
-        ): SingleQubitOperation(controlQubits, targetQubit, qubitOrder, pauli_x_gate, "X gate") {}
+        ): SingleQubitOperation(controlQubits, targetQubit, qubitOrder, qubitconsts::pauli_x_gate, "X gate") {}
     };
     class YGate : public SingleQubitOperation {
         public:
@@ -194,7 +195,7 @@ namespace operations {
             const std::vector<unsigned> &controlQubits,
             unsigned targetQubit,
             const std::vector<unsigned> &qubitOrder
-        ): SingleQubitOperation(controlQubits, targetQubit, qubitOrder, pauli_y_gate, "Y gate") {}
+        ): SingleQubitOperation(controlQubits, targetQubit, qubitOrder, qubitconsts::pauli_y_gate, "Y gate") {}
     };
     class ZGate : public SingleQubitOperation {
         public:
@@ -202,7 +203,7 @@ namespace operations {
             const std::vector<unsigned> &controlQubits,
             unsigned targetQubit,
             const std::vector<unsigned> &qubitOrder
-        ): SingleQubitOperation(controlQubits, targetQubit, qubitOrder, pauli_z_gate, "Z gate") {}
+        ): SingleQubitOperation(controlQubits, targetQubit, qubitOrder, qubitconsts::pauli_z_gate, "Z gate") {}
     };
     class PhaseGate : public SingleQubitOperation {
         public:
@@ -210,7 +211,7 @@ namespace operations {
             const std::vector<unsigned> &controlQubits,
             unsigned targetQubit,
             const std::vector<unsigned> &qubitOrder
-        ): SingleQubitOperation(controlQubits, targetQubit, qubitOrder, phase_s_gate, "S gate") {}
+        ): SingleQubitOperation(controlQubits, targetQubit, qubitOrder, qubitconsts::phase_s_gate, "S gate") {}
     };
 
     // two qubit operations
@@ -461,7 +462,7 @@ namespace operations {
         }
 
         OperationGraph(unsigned initialQubitCount) {
-            this->initialQubits = std::make_shared<std::vector<Qubit>>(initialQubitCount, zero_basis_state);
+            this->initialQubits = std::make_shared<std::vector<Qubit>>(initialQubitCount, qubitconsts::zero_basis_state);
         }
 
         void clear() {

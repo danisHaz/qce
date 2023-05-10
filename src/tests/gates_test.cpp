@@ -4,7 +4,7 @@
 void hadamard_gate_test() {
     std::vector<unsigned> qubitPositions = {0, 1, 2};
     std::vector<unsigned> controlQubits;
-    const float ampl = qce::_RSQRROOT_OF_2;
+    const float ampl = qce::qubitconsts::_RSQRROOT_OF_2;
     qce::operations::HadamardGate gate(controlQubits, 1, qubitPositions);
     qce::DynamicQubitState state = (qce::DynamicQubitState(8) << 0,0,0,0,ampl,0,ampl,0).finished();
 
@@ -26,7 +26,7 @@ void cnot_gate_test() {
     controlQubits = {0};
     qubitPositions = {2, 0, 1};
     qce::operations::CnotGate gate1(controlQubits, 2, qubitPositions);
-    const float ampl = qce::_RSQRROOT_OF_2;
+    const float ampl = qce::qubitconsts::_RSQRROOT_OF_2;
     qce::DynamicQubitState state1 = (qce::DynamicQubitState(8) << 0,0,0,0,0,0,ampl,ampl).finished();
 
     auto operation1 = gate1.constructOperation();
@@ -45,7 +45,7 @@ void swap_gate_test() {
     controlQubits = {0};
     qubitPositions = {0, 1, 3};
     qce::operations::SwapGate gate1(controlQubits, 3, qubitPositions);
-    const float ampl = qce::_RSQRROOT_OF_2;
+    const float ampl = qce::qubitconsts::_RSQRROOT_OF_2;
     qce::DynamicQubitState state1 = (qce::DynamicQubitState(8) << 0,0,0,0,0,0,ampl,ampl).finished();
 
     auto operation1 = gate1.constructOperation();
@@ -74,7 +74,7 @@ void cz_gate_test() {
 void cphase_gate_test() {
     std::vector<unsigned> qubitPositions = {0, 1, 2};
     std::vector<unsigned> controlQubits = {0};
-    const float ampl = qce::_RSQRROOT_OF_2;
+    const float ampl = qce::qubitconsts::_RSQRROOT_OF_2;
     qce::operations::CPhaseGate gate(controlQubits, 2, qubitPositions);
     qce::DynamicQubitState state = (qce::DynamicQubitState(8) << ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2).finished();
 
@@ -93,7 +93,7 @@ void chain_multiple_hadamard_test() {
     auto result = gate0.applyOperation({state, state, state});
     result = gate1.applyOperation({result});
     result = gate2.applyOperation({result});
-    const float ampl = qce::_RSQRROOT_OF_2;
+    const float ampl = qce::qubitconsts::_RSQRROOT_OF_2;
 
     // std::cout << result << "\n\n";
     // std::cout << (qce::DynamicQubitState(8) << ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2).finished() << "\n";

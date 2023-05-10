@@ -1,6 +1,7 @@
 #include "QubitEnv.hpp"
 #include <algorithm>
 #include "Exceptions.h"
+#include "QubitConsts.hpp"
 
 qce::QubitEnv::QubitEnv() {
     this->arr = std::vector<qce::Qubit>();
@@ -66,27 +67,27 @@ void qce::QubitEnv::applyOperationOn2Qubit(unsigned fQubitIndex, unsigned sQubit
 }
 
 void qce::QubitEnv::hadamard(unsigned qubitIndex) {
-    applyOperationOnQubit(qubitIndex, hadamard_gate);
+    applyOperationOnQubit(qubitIndex, qubitconsts::hadamard_gate);
 }
 
 void qce::QubitEnv::x(unsigned qubitIndex) {
-    applyOperationOnQubit(qubitIndex, pauli_x_gate);
+    applyOperationOnQubit(qubitIndex, qubitconsts::pauli_x_gate);
 }
 
 void qce::QubitEnv::y(unsigned qubitIndex) {
-    applyOperationOnQubit(qubitIndex, pauli_y_gate);
+    applyOperationOnQubit(qubitIndex, qubitconsts::pauli_y_gate);
 }
 
 void qce::QubitEnv::z(unsigned qubitIndex) {
-    applyOperationOnQubit(qubitIndex, pauli_z_gate);
+    applyOperationOnQubit(qubitIndex, qubitconsts::pauli_z_gate);
 }
 
 void qce::QubitEnv::s(unsigned qubitIndex) {
-    applyOperationOnQubit(qubitIndex, phase_s_gate);
+    applyOperationOnQubit(qubitIndex, qubitconsts::phase_s_gate);
 }
 
 void qce::QubitEnv::cnot(unsigned inverseQubitIndex, unsigned controlQubitIndex) {
-    applyOperationOn2Qubit(controlQubitIndex, inverseQubitIndex, cnot_gate);
+    applyOperationOn2Qubit(controlQubitIndex, inverseQubitIndex, qubitconsts::cnot_gate);
 }
 
 qce::Qubit qce::QubitEnv::getQubit(unsigned qubitIndex) const {
