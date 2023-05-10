@@ -71,9 +71,40 @@ void cz_gate_test() {
     assert(result == (qce::DynamicQubitState(16) << 0.5,0.5,0,0,0,0,0,0,0.5,-0.5,0,0,0,0,0,0).finished());
 }
 
+void cphase_gate_test() {
+    std::vector<unsigned> qubitPositions = {0, 1, 2};
+    std::vector<unsigned> controlQubits = {0};
+    const float ampl = qce::_RSQRROOT_OF_2;
+    qce::operations::CPhaseGate gate(controlQubits, 2, qubitPositions);
+    qce::DynamicQubitState state = (qce::DynamicQubitState(8) << ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2).finished();
+
+    auto result = gate.applyOperation({state});
+    assert(result == (qce::DynamicQubitState(8) << ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,Eigen::dcomplex(0, ampl/2),ampl/2,Eigen::dcomplex(0, ampl/2)).finished());
+}
+
+void chain_multiple_hadamard_test() {
+    std::vector<unsigned> qubitPositions = {0, 1, 2};
+    std::vector<unsigned> controlQubits;
+    qce::operations::HadamardGate gate0(controlQubits, 0, qubitPositions);
+    qce::operations::HadamardGate gate1(controlQubits, 1, qubitPositions);
+    qce::operations::HadamardGate gate2(controlQubits, 2, qubitPositions);
+    qce::DynamicQubitState state = (qce::DynamicQubitState(2) << 1,0).finished();
+
+    auto result = gate0.applyOperation({state, state, state});
+    result = gate1.applyOperation({result});
+    result = gate2.applyOperation({result});
+    const float ampl = qce::_RSQRROOT_OF_2;
+
+    // std::cout << result << "\n\n";
+    // std::cout << (qce::DynamicQubitState(8) << ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2).finished() << "\n";
+    assert(result == (qce::DynamicQubitState(8) << ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2).finished());
+}
+
 int main() {
     // hadamard_gate_test();
     cnot_gate_test();
     swap_gate_test();
     cz_gate_test();
+    cphase_gate_test();
+    chain_multiple_hadamard_test();
 }
