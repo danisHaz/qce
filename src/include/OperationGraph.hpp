@@ -163,7 +163,7 @@ namespace operations {
             
             for (std::size_t i = 0; i < data.size(); i++) {
                 DynamicQubitMat_t matrix = (i == targetQubit ? singleOperationMatrix : identity);
-                result = utils::kroneckerProduct(result, matrix);
+                result = qce::utils::kroneckerProduct(result, matrix);
             }
 
             return OperationResultHolder<DynamicQubitMat_t>(
@@ -294,8 +294,6 @@ namespace operations {
                 }
 
                 if (!targetCheck) {
-                    // means that this is an amplitude for |..1..1..> state
-                    // change to |..1..0..> (|..0..1..>)
                     result(i, i-targetQubitNumber+controlQubitNumber) = 1;
                 } else {
                     result(i, i+targetQubitNumber-controlQubitNumber) = 1;
@@ -314,7 +312,32 @@ namespace operations {
         ): QubitOperation(controlQubits, targetQubit, qubitOrder) {}
         
         OperationResultHolder<DynamicQubitMat_t> constructOperation() override {
-            throw NOT_IMPLEMENTED_ERROR_CODE;
+            std::size_t n = data.size();
+            
+            // count target qubit's position in relation with qubit order
+            std::size_t targetQubitRelativePosition = utils::findIndex(data.begin(), data.end(), targetQubit);
+            std::size_t controlQubitRelativePosition = utils::findIndex(data.begin(), data.end(), controlQubits[0]);
+
+            // find power
+            std::size_t targetQubitNumber = (1 << (n-targetQubitRelativePosition-1));
+            std::size_t controlQubitNumber = (1 << (n-controlQubitRelativePosition-1));
+
+            // implement algorithm for swapping amplitudes for target and control
+            std::size_t resultMatrixSize = (1 << n);
+            DynamicQubitMat_t result = Eigen::MatrixXcd::Zero(resultMatrixSize, resultMatrixSize);
+
+            for (std::size_t i = 0; i < resultMatrixSize; i++) {
+                bool controlCheck = (i & controlQubitNumber) == 0;
+                bool targetCheck = (i & targetQubitNumber) == 0;
+
+                if (controlCheck == targetCheck && !targetCheck) {
+                    result(i, i) = -1;
+                } else {
+                    result(i, i) = 1;
+                }
+            }
+
+            return OperationResultHolder<DynamicQubitMat_t>(data, std::make_shared<DynamicQubitMat_t>(result));
         }
     };
     class CPhaseGate : public QubitOperation<const std::vector<unsigned>, OperationResultHolder<DynamicQubitMat_t>> {
@@ -326,7 +349,33 @@ namespace operations {
         ): QubitOperation(controlQubits, targetQubit, qubitOrder) {}
         
         OperationResultHolder<DynamicQubitMat_t> constructOperation() override {
-            throw NOT_IMPLEMENTED_ERROR_CODE;
+            using namespace std::complex_literals;
+            std::size_t n = data.size();
+            
+            // count target qubit's position in relation with qubit order
+            std::size_t targetQubitRelativePosition = utils::findIndex(data.begin(), data.end(), targetQubit);
+            std::size_t controlQubitRelativePosition = utils::findIndex(data.begin(), data.end(), controlQubits[0]);
+
+            // find power
+            std::size_t targetQubitNumber = (1 << (n-targetQubitRelativePosition-1));
+            std::size_t controlQubitNumber = (1 << (n-controlQubitRelativePosition-1));
+
+            // implement algorithm for swapping amplitudes for target and control
+            std::size_t resultMatrixSize = (1 << n);
+            DynamicQubitMat_t result = Eigen::MatrixXcd::Zero(resultMatrixSize, resultMatrixSize);
+
+            for (std::size_t i = 0; i < resultMatrixSize; i++) {
+                bool controlCheck = (i & controlQubitNumber) == 0;
+                bool targetCheck = (i & targetQubitNumber) == 0;
+
+                if (controlCheck == targetCheck && !targetCheck) {
+                    result(i, i) = 1i;
+                } else {
+                    result(i, i) = 1;
+                }
+            }
+
+            return OperationResultHolder<DynamicQubitMat_t>(data, std::make_shared<DynamicQubitMat_t>(result));
         }
     };
     

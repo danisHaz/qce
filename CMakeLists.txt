@@ -27,6 +27,7 @@ add_executable(UtilsTest
 )
 add_executable(GatesTest
     ${PROJECT_SOURCE_DIR}/src/tests/gates_test.cpp
+    src/main/Utils.cpp
 )
 target_include_directories(UtilsTest 
     PRIVATE
