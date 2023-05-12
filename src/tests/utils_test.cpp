@@ -1,7 +1,7 @@
 #include <cassert>
 #include <algorithm>
 #include <complex>
-#include "Utils.cpp"
+#include "Utils.hpp"
 #include <Eigen/Dense>
 
 void integer_log_test() {

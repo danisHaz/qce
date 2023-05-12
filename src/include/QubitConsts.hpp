@@ -4,7 +4,7 @@
 #include <complex>
 #include "Utils.hpp"
 #include <Eigen/Dense>
-#include "Qbit.h"
+#include "Qubit.h"
 
 #ifndef __Qubit_consts__
 #define __Qubit_consts__

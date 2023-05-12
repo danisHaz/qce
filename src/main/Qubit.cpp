@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <complex>
-#include "Qbit.h"
+#include "Qubit.h"
 #include <Eigen/Dense>
 #include <cmath>
 #include <memory>

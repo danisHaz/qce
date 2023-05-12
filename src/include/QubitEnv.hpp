@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Qbit.h"
+#include "Qubit.h"
 #include "QubitConsts.hpp"
 #include <Eigen/Dense>
 #include <vector>

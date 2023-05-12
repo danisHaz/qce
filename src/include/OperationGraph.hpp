@@ -4,11 +4,14 @@
 #include <memory>
 #include <cassert>
 #include <iostream>
+#include <queue>
+
 #include "Exceptions.h"
 #include "QubitEnv.hpp"
 #include "QubitVector.hpp"
 #include "Utils.hpp"
 #include "QubitConsts.hpp"
+#include "OperationArgs.hpp"
 
 namespace qce {
 namespace operations {
@@ -34,10 +37,10 @@ namespace operations {
         }
     };
 
-    template<typename QubitState_t>
+    template<typename ResultState_t>
     class BaseOperation {
-        virtual QubitState_t applyOperation(
-            const std::vector<QubitState_t> &states
+        virtual ResultState_t applyOperation(
+            const std::vector<OperationArgs> &states
         ) = 0;
     };
 
@@ -45,28 +48,28 @@ namespace operations {
      * Class for operation node in graph of operations.
      * Instance of this class contains information how to construct typical operation, e.g. gate.
     */
-    template<typename data_t, typename oper_result_t, typename QubitState_t>
+    template<typename Data_t, typename OperResult_t, typename ResultState_t>
     class Operation : public BaseOperation<DynamicQubitState> {
 
-        // typedef std::function<oper_result_t*(oper_signature_t)> oper_t;
+        // typedef std::function<OperResult_t*(oper_signature_t)> oper_t;
         
         protected:
-        data_t &data;
+        Data_t &data;
         
         public:
-        Operation(data_t &data): data{data} {}
+        Operation(Data_t &data): data{data} {}
         Operation(const Operation &operation) {
             this->data = operation->data;
         }
 
-        virtual oper_result_t constructOperation() = 0;
-        virtual QubitState_t applyOperation(
-            const std::vector<QubitState_t> &states
+        virtual OperResult_t constructOperation() = 0;
+        virtual ResultState_t applyOperation(
+            const std::vector<OperationArgs> &states
         ) = 0;
     };
 
-    template<typename data_t, typename oper_result_t>
-    class QubitOperation : public Operation<data_t, oper_result_t, DynamicQubitState> {
+    template<typename Data_t, typename OperResult_t>
+    class QubitOperation : public Operation<Data_t, OperResult_t, DynamicQubitState> {
         
         #ifndef QUBIT_NUMBER_UNDEFINED
             #define QUBIT_NUMBER_UNDEFINED 0
@@ -77,9 +80,10 @@ namespace operations {
         unsigned targetQubit;
         unsigned qubitNumber;
 
-        unsigned countQubitNumber(const std::vector<DynamicQubitState> &qubitStates) {
+        unsigned countQubitNumber(const std::vector<OperationArgs> &qubitStates) {
             unsigned result = 0;
-            for (const DynamicQubitState &qs: qubitStates) {
+            for (const OperationArgs &args: qubitStates) {
+                const DynamicQubitState qs = args.qstate;
                 std::size_t qsSize = qs.size();
 
                 // count bits in count number of different states in particular qubit state
@@ -106,12 +110,12 @@ namespace operations {
         }
 
         DynamicQubitState combineStates(
-            const std::vector<DynamicQubitState> &states
-        ) {
-            DynamicQubitState result = states[0];
+            const std::vector<OperationArgs> &states
+        ) const {
+            DynamicQubitState result = states[0].qstate;
 
             for (std::size_t i = 1; i < states.size(); i++) {
-                result = combineStates(result, states[i]);
+                result = combineStates(result, states[i].qstate);
             }
 
             return result;
@@ -122,9 +126,9 @@ namespace operations {
         QubitOperation(
             const std::vector<unsigned> &controlQubits,
             unsigned targetQubit,
-            data_t &data = nullptr,
+            Data_t &data = nullptr,
             const std::string &operationName = ""
-        ): Operation<data_t, oper_result_t, DynamicQubitState>(data), targetQubit(targetQubit) {
+        ): Operation<Data_t, OperResult_t, DynamicQubitState>(data), targetQubit(targetQubit) {
             this->controlQubits = std::vector<unsigned>(controlQubits);
             this->qubitNumber = QUBIT_NUMBER_UNDEFINED;
             if (operationName != "") {
@@ -132,13 +136,13 @@ namespace operations {
             }
         }
 
-        virtual oper_result_t constructOperation() = 0;
+        virtual OperResult_t constructOperation() = 0;
 
         DynamicQubitState applyOperation(
-            const std::vector<DynamicQubitState> &states
+            const std::vector<OperationArgs> &states
         ) override {
             qubitNumber = countQubitNumber(states);
-            oper_result_t operation = constructOperation();
+            OperResult_t operation = constructOperation();
             DynamicQubitState combinedState = combineStates(states);
             return (*operation.result) * combinedState;
         }
@@ -386,101 +390,77 @@ namespace operations {
     class Node {
 
         std::shared_ptr<NodeData_t> data;
-        std::vector<std::shared_ptr<Node<NodeData_t>>> children;
 
         public:
         Node(const Node &node) {
-            this->children = std::vector<std::shared_ptr<Node<NodeData_t>>>(node->children);
-        }
-
-        Node(const std::vector<std::shared_ptr<Node<NodeData_t>>> &nodes) {
-            this->children = std::vector<std::shared_ptr<Node<NodeData_t>>>(nodes);
-        }
-
-        Node(std::size_t childrenNodeCount, const Node<NodeData_t> &initNode) {
-            this->children.reserve(childrenNodeCount);
-
-            this->children.emplace_back(
-                std::make_shared<Node<NodeData_t>>(initNode)
-            );
+            data = std::make_shared<NodeData_t>(*node.data);
         }
 
         Node(const NodeData_t& data) {
             this->data = std::make_shared<NodeData_t>(data);
         }
 
+        Node(Node &&node) {
+            data = node.data;
+            node.data = nullptr;
+        }
+
+        Node& operator=(Node &&node) {
+            data = node.data;
+            node.data = nullptr;
+        }
+
         std::shared_ptr<NodeData_t> getData() {
             return this->data;
         }
-
-        bool hasNext(unsigned nextElementIndex=0) {
-            if (this->children.size() <= nextElementIndex) {
-                return false;
-            }
-
-            return true;
-        }
-
-        std::shared_ptr<Node<NodeData_t>> getNext(unsigned nextElementIndex=0) {
-            if (!hasNext(nextElementIndex)) {
-                
-            }
-        }
     };
 
-    template<typename NodeData_t>
-    class Graph {
-
-        std::vector<std::shared_ptr<Node<NodeData_t>>> basicNodes, currentNodes;
-
-        public:
-        Graph(const std::vector<std::shared_ptr<Node<NodeData_t>>> &basicNodes) {
-            this->basicNodes = std::vector<std::shared_ptr<Node<NodeData_t>>>(basicNodes);
-
-        }
-
-        Graph(std::size_t nodesCount, const Node<NodeData_t> &initNode) {
-            this->basicNodes.reserve(nodesCount);
-
-            for (std::size_t i = 0; i < nodesCount; i++) {
-                this->basicNodes.emplace_back(
-                    std::make_shared<Node<NodeData_t>>(initNode)
-                );
-            }
-        }
-
-        virtual void add() = 0;
-    };
-
+    template<typename OperationType_t>
     class OperationGraph {
-        std::shared_ptr<std::vector<Qubit>> initialQubits;
-        std::vector<std::vector<BaseOperation<OperationResultHolder<DynamicQubitState>>>> graph;
+        std::vector<Node<OperationType_t>> nodes;
 
         public:
         OperationGraph() {
-            this->initialQubits = std::make_shared<std::vector<Qubit>>();
+            nodes = std::vector<Node<OperationType_t>>();
         }
 
-        OperationGraph(unsigned initialQubitCount) {
-            this->initialQubits = std::make_shared<std::vector<Qubit>>(initialQubitCount, qubitconsts::zero_basis_state);
+        OperationGraph(const std::vector<Node<OperationType_t>> &nodes) {
+            this->nodes = std::vector<Node<OperationType_t>>(nodes);
         }
 
-        void clear() {
-            initialQubits->clear();
+        OperationGraph(std::vector<Node<OperationType_t>> &&nodes) {
+            nodes = std::vector<Node<OperationType_t>>(nodes);
         }
 
-        void addNode(std::shared_ptr<BaseOperation<OperationResultHolder<DynamicQubitState>>> operation, unsigned qubitIndex) {
-            throw NOT_IMPLEMENTED_ERROR_CODE;
+        OperationGraph(const std::size_t nodesCount) {
+            nodes.reserve(nodesCount);
         }
 
-        void addQubit(const Qubit& q) {
-            initialQubits->push_back(Qubit(q));
+        void add(const Node<OperationType_t> &node) {
+            Node<OperationType_t> node_c(node);
+            if (nodes.capacity() >= 1) {
+                nodes.emplace_back(node_c);
+            } else {
+                nodes.push_back(node_c);
+            }
         }
 
-        void addQubit(std::shared_ptr<Qubit> q) {
-            initialQubits->push_back(Qubit(q));
+        void add(Node<OperationType_t> &&node) {
+            Node<OperationType_t> node_m(node);
+            if (nodes.capacity() >= 1) {
+                nodes.emplace_back(node_m);
+            } else {
+                nodes.push_back(node_m);
+            }
+        }
+
+        void remove(std::size_t operationIndex) {
+            if (operationIndex > nodes.size()) {
+                throw std::invalid_argument("Provided invalid argument operationIndex OperationGraph");
+            }
+
+            nodes.erase(nodes.begin() + (std::ptrdiff_t)operationIndex);
         }
     };
-
 } // namespace operations
 } // namespace qce

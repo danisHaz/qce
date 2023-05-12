@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>
-#include "Qbit.h"
+#include "Qubit.h"
 #include <vector>
 #include <memory>
 #include <cmath>

@@ -1,5 +1,5 @@
 #include <iostream>
-#include "Qbit.h"
+#include "Qubit.h"
 #include "QubitEnv.hpp"
 #include <Eigen/Dense>
 #include <complex>
