@@ -2,6 +2,10 @@
 
 #include <memory>
 #include <Eigen/Eigen>
+#include <random>
+#include <vector>
+
+#include "Qubit.h"
 
 namespace qce { 
 namespace utils {
@@ -45,5 +49,34 @@ namespace utils {
         for (;begin != end && *begin != value; begin++, ind++);
         return ind;
     }
+
+    #ifndef _rrand32u_func
+    #define _rrand32u_func rand
+    #endif
+
+    int32_t rrandom32();
+    int64_t rrandom64();
+    uint32_t rrandom32u();
+    uint64_t rrandom64u();
+
+    template<typename T>
+    std::vector<T> mergeVectors(const std::vector<T> &a, const std::vector<T> &b) {
+        std::vector<T> result();
+        result.reserver(a.size() + b.size());
+        result.insert(result.begin(), a.begin(), a.end());
+        result.insert(result.begin()+(ptrdiff_t)a.size(), b.begin(), b.end());
+
+        return std::move(result);
+    }
+
+    qce::DynamicQubitState combineStates(
+        const qce::DynamicQubitState &first,
+        const qce::DynamicQubitState &second
+    );
+
+    qce::DynamicQubitState combineStates(
+        const std::vector<qce::DynamicQubitState> &states
+    );
+
 } // utils
 } // qce

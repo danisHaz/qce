@@ -1,28 +1,33 @@
 #pragma once
 
-#include "Qubit.h"
-#include "QubitConsts.hpp"
 #include <Eigen/Dense>
 #include <vector>
+
+#include "Qubit.h"
+#include "QubitConsts.hpp"
+#include "OperationArgs.hpp"
+#include "OperationGraph.hpp"
 
 namespace qce {
     
     class QubitEnv {
 
+        typedef std::shared_ptr<operations::BaseOperation<operations::OperationResultHolder<DynamicQubitState>>> BaseOperationPtr_t;
+
+        typedef operations::OperationGraph<
+            BaseOperationPtr_t,
+            QubitState> QubitOperationGraph;
+
         private:
 
-        std::vector<Qubit> arr;
-
-        bool checkQubitIndOutOfRange(unsigned qubitIndex);
-        void applyOperationOnQubit(unsigned qubitIndex, QubitMat_t mat);
-        void applyOperationOn2Qubit(unsigned fQubitIndex, unsigned sQubitIndex, TwoQubitMat_t mat);
+        QubitOperationGraph graph;
 
         public:
 
         QubitEnv();
-        QubitEnv(const std::vector<Qubit>& vec);
+        QubitEnv(const std::vector<Qubit>& qubits);
         QubitEnv(const Qubit& qubit);
-        QubitEnv(std::size_t qubitNumber, Qubit initialState = qubitconsts::zero_basis_state);
+        QubitEnv(std::size_t qubitNumber, const QubitState &initialState);
 
         // Section with common gates
 

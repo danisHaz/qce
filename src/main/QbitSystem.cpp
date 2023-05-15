@@ -15,14 +15,14 @@ int main() {
     std::vector<unsigned> qubitPositions = {0, 1, 2};
     std::vector<unsigned> controlQubits = {0};
     qce::operations::CnotGate gate(controlQubits, 1, qubitPositions);
-    qce::operations::HadamardGate hadamardGate({}, 1, {0, 1, 2});
+    qce::operations::HadamardGate hadamardGate(1, {0, 1, 2});
 
     qce::DynamicQubitState state = (qce::DynamicQubitState(8) << 0,0,0,0,1,0,0,0).finished();
 
     auto operation = gate.constructOperation();
-    std::cout << *operation.result << "\n";
+    std::cout << operation << "\n";
 
-    std::cout << (*operation.result) * state << "\n";
+    std::cout << operation * state << "\n";
 
     return 0;
 }
