@@ -69,11 +69,11 @@ namespace qce {
         /**
          * Swap gate
         */
-        void swap();
+        void swap(unsigned firstQubitIndex, unsigned secondQubitIndex);
         /**
          * Controlled z gate
         */
-        void cz();
+        void cz(unsigned zQubitIndex, unsigned controlQubitIndex);
         /**
          * Controlled swap gate
         */
