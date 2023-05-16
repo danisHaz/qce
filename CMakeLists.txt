@@ -14,7 +14,7 @@ set(COMMON_SOURCES
 set(CMAKE_CXX_FLAGS_DEBUG "-fsanitize=address,undefined")
 set(CMAKE_CXX_FLAGS "-std=c++17")
 
-add_executable(Platform 
+add_executable(Platform
     ${COMMON_SOURCES}
     src/main/QbitSystem.cpp
 )

@@ -28,14 +28,44 @@ qce::OperGraphState qce::QubitEnv::provideExecutionArgs() const {
     return graph.compileState();
 }
 
-void qce::QubitEnv::hadamard(unsigned qubitIndex) {
-    // std::vector<unsigned> currentIndices = graph.findQubitUnion(qubitIndex);
-    std::size_t cap = graph.getStatesCount();
+std::vector<unsigned> GENERATE_INDICES_BASE(const qce::QubitOperationGraph &g) {
+    std::size_t cap = g.getStatesCount();
     std::vector<unsigned> currentIndices(cap);
     for (std::size_t i = 0; i < cap; i++) {
         currentIndices[i] = i;
     }
-    BaseOperationPtr_t hGate = std::make_shared<operations::HadamardGate>(qubitIndex, currentIndices);
 
+    return currentIndices;
+}
+
+#ifndef _INDICES_GENERATOR_
+    #define GENERATE_INDICES_FUNC GENERATE_INDICES_BASE
+#endif
+
+void qce::QubitEnv::hadamard(unsigned qubitIndex) {
+    std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
+    BaseOperationPtr_t hGate = std::make_shared<operations::HadamardGate>(qubitIndex, indices);
     graph.add(hGate);
+}
+
+void qce::QubitEnv::x(unsigned qubitIndex) {
+    std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
+    BaseOperationPtr_t xGate = std::make_shared<operations::XGate>(qubitIndex, indices);
+    graph.add(xGate);
+}
+
+void qce::QubitEnv::y(unsigned qubitIndex) {
+    std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
+    BaseOperationPtr_t yGate = std::make_shared<operations::YGate>(qubitIndex, indices);
+    graph.add(yGate);
+}
+
+void qce::QubitEnv::z(unsigned qubitIndex) {
+    std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
+    BaseOperationPtr_t zGate = std::make_shared<operations::ZGate>(qubitIndex, indices);
+    graph.add(zGate);
+}
+
+void qce::QubitEnv::cnot(unsigned inverseQubitIndex, unsigned controlQubitIndex) {
+    
 }

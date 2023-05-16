@@ -17,3 +17,5 @@ GatesTest
 Test
 UtilsTest
 src/libs/Eigen
+/Debug
+/Release
