@@ -39,6 +39,13 @@ target_sources(GatesTest
     ${COMMON_SOURCES}
 )
 
+add_executable(QubitEnvTest)
+target_sources(QubitEnvTest
+    PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/tests/qubitenv_test.cpp
+    ${COMMON_SOURCES}
+)
+
 target_include_directories(UtilsTest 
     PRIVATE
     ${PROJECT_SOURCE_DIR}/src/include
@@ -49,5 +56,11 @@ target_include_directories(GatesTest
     ${PROJECT_SOURCE_DIR}/src/include
     ${PROJECT_SOURCE_DIR}/src/libs
 )
+target_include_directories(QubitEnvTest
+    PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include
+    ${PROJECT_SOURCE_DIR}/src/libs
+)
 add_test(NAME utils_test COMMAND UtilsTest)
 add_test(NAME gates_test COMMAND GatesTest)
+add_test(NAME qubitenv_test COMMAND QubitEnvTest)

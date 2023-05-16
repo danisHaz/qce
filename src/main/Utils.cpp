@@ -53,7 +53,7 @@ qce::DynamicQubitState qce::utils::combineStates(
     return result;
 }
 
-qce::DynamicQubitState combineStates(
+qce::DynamicQubitState qce::utils::combineStates(
     const std::vector<qce::DynamicQubitState> &states
 ) {
     qce::DynamicQubitState result = states[0];

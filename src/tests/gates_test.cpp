@@ -1,5 +1,8 @@
 #include <cassert>
 #include "OperationGraph.hpp"
+#include "OperationArgs.hpp"
+
+const double GATE_EQ_PRECISION = 1e-5;
 
 void hadamard_gate_test() {
     std::vector<unsigned> qubitPositions = {0, 1, 2};
@@ -8,10 +11,11 @@ void hadamard_gate_test() {
     qce::operations::HadamardGate gate(1, qubitPositions);
     qce::DynamicQubitState state = (qce::DynamicQubitState(8) << 0,0,0,0,ampl,0,ampl,0).finished();
 
-    auto result = gate.applyOperation({state});
+    auto result = gate.applyOperation(qce::operations::OperationArgs(state));
+    auto answer = (qce::DynamicQubitState(8) << 0,0,0,0,1,0,0,0).finished();
     // std::cout << result << "\n\n";
     // std::cout << (qce::DynamicQubitState(8) << 0,0,0,0,1,0,0,0).finished() << "\n";
-    assert(result.result == (qce::DynamicQubitState(8) << 0,0,0,0,1,0,0,0).finished());
+    assert(result.result.isApprox(answer, GATE_EQ_PRECISION));
 }
 
 void cnot_gate_test() {
@@ -21,7 +25,8 @@ void cnot_gate_test() {
     qce::DynamicQubitState state = (qce::DynamicQubitState(8) << 0,0,0,0,1,0,0,0).finished();
 
     auto operation = gate.constructOperation();
-    assert(operation * state == (qce::DynamicQubitState(8) << 0,0,0,0,0,0,1,0).finished());
+    auto answer = (qce::DynamicQubitState(8) << 0,0,0,0,0,0,1,0).finished();
+    assert((operation * state).isApprox(answer, GATE_EQ_PRECISION));
 
     controlQubits = {0};
     qubitPositions = {2, 0, 1};
@@ -30,7 +35,8 @@ void cnot_gate_test() {
     qce::DynamicQubitState state1 = (qce::DynamicQubitState(8) << 0,0,0,0,0,0,ampl,ampl).finished();
 
     auto operation1 = gate1.constructOperation();
-    assert(operation1 * state1 == (qce::DynamicQubitState(8) << 0,0,ampl,ampl,0,0,0,0).finished());
+    auto answer1 = (qce::DynamicQubitState(8) << 0,0,ampl,ampl,0,0,0,0).finished();
+    assert((operation1 * state1).isApprox(answer1, GATE_EQ_PRECISION));
 }
 
 void swap_gate_test() {
@@ -40,7 +46,8 @@ void swap_gate_test() {
     qce::DynamicQubitState state = (qce::DynamicQubitState(8) << 0,0,0,0,1,0,0,0).finished();
 
     auto operation = gate.constructOperation();
-    assert(operation * state == (qce::DynamicQubitState(8) << 0,0,1,0,0,0,0,0).finished());
+    auto answer = (qce::DynamicQubitState(8) << 0,0,1,0,0,0,0,0).finished();
+    assert((operation * state).isApprox(answer, GATE_EQ_PRECISION));
 
     controlQubits = {0};
     qubitPositions = {0, 1, 3};
@@ -49,8 +56,9 @@ void swap_gate_test() {
     qce::DynamicQubitState state1 = (qce::DynamicQubitState(8) << 0,0,0,0,0,0,ampl,ampl).finished();
 
     auto operation1 = gate1.constructOperation();
+    auto answer1 = (qce::DynamicQubitState(8) << 0,0,0,ampl,0,0,0,ampl).finished();
     // std::cout << *operation1.result << "\n";
-    assert(operation1 * state1 == (qce::DynamicQubitState(8) << 0,0,0,ampl,0,0,0,ampl).finished());
+    assert((operation1 * state1).isApprox(answer1, GATE_EQ_PRECISION));
 }
 
 void cz_gate_test() {
@@ -59,16 +67,18 @@ void cz_gate_test() {
     qce::operations::CZGate gate(controlQubits, 2, qubitPositions);
     qce::DynamicQubitState state = (qce::DynamicQubitState(8) << 0.5,0.5,0,0,0.5,0.5,0,0).finished();
 
-    auto result = gate.applyOperation({state});
-    assert(result.result == (qce::DynamicQubitState(8) << 0.5,0.5,0,0,0.5,-0.5,0,-0).finished());
+    auto result = gate.applyOperation(qce::operations::OperationArgs(state));
+    auto answer = (qce::DynamicQubitState(8) << 0.5,0.5,0,0,0.5,-0.5,0,-0).finished();
+    assert(result.result.isApprox(answer, GATE_EQ_PRECISION));
 
     qubitPositions = {0, 1, 2, 3};
     controlQubits = {3};
     qce::operations::CZGate gate1(controlQubits, 0, qubitPositions);
     state = (qce::DynamicQubitState(16) << 0.5,0.5,0,0,0,0,0,0,0.5,0.5,0,0,0,0,0,0).finished();
 
-    auto result1 = gate1.applyOperation({state});
-    assert(result1.result == (qce::DynamicQubitState(16) << 0.5,0.5,0,0,0,0,0,0,0.5,-0.5,0,0,0,0,0,0).finished());
+    auto result1 = gate1.applyOperation(qce::operations::OperationArgs(state));
+    auto answer1 = (qce::DynamicQubitState(16) << 0.5,0.5,0,0,0,0,0,0,0.5,-0.5,0,0,0,0,0,0).finished();
+    assert(result1.result.isApprox(answer1, GATE_EQ_PRECISION));
 }
 
 void cphase_gate_test() {
@@ -78,26 +88,29 @@ void cphase_gate_test() {
     qce::operations::CPhaseGate gate(controlQubits, 2, qubitPositions);
     qce::DynamicQubitState state = (qce::DynamicQubitState(8) << ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2).finished();
 
-    auto result = gate.applyOperation({state});
-    assert(result.result == (qce::DynamicQubitState(8) << ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,Eigen::dcomplex(0, ampl/2),ampl/2,Eigen::dcomplex(0, ampl/2)).finished());
+    auto result = gate.applyOperation(qce::operations::OperationArgs(state));
+    auto answer = (qce::DynamicQubitState(8) << ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,Eigen::dcomplex(0, ampl/2),ampl/2,Eigen::dcomplex(0, ampl/2)).finished();
+    assert(result.result.isApprox(answer, GATE_EQ_PRECISION));
 }
 
 void chain_multiple_hadamard_test() {
     std::vector<unsigned> qubitPositions = {0, 1, 2};
-    std::vector<unsigned> controlQubits;
     qce::operations::HadamardGate gate0(0, qubitPositions);
     qce::operations::HadamardGate gate1(1, qubitPositions);
     qce::operations::HadamardGate gate2(2, qubitPositions);
-    qce::DynamicQubitState state = (qce::DynamicQubitState(2) << 1,0).finished();
+    qce::DynamicQubitState state = (qce::DynamicQubitState(8) << 1,0,0,0,0,0,0,0).finished();
 
-    // auto result = gate0.applyOperation({state, state, state});
-    // result = gate1.applyOperation({result});
-    // result = gate2.applyOperation({result});
-    // const float ampl = qce::qubitconsts::_RSQRROOT_OF_2;
+    auto result0 = gate0.applyOperation(qce::operations::OperationArgs(state));
+    auto result1 = gate1.applyOperation(qce::operations::OperationArgs(result0.result));
+    auto result2 = gate2.applyOperation(qce::operations::OperationArgs(result1.result));
+    const float ampl = qce::qubitconsts::_RSQRROOT_OF_2;
 
-    // // std::cout << result << "\n\n";
-    // // std::cout << (qce::DynamicQubitState(8) << ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2).finished() << "\n";
-    // assert(result == (qce::DynamicQubitState(8) << ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2).finished());
+    // auto resultState = qce::utils::kroneckerProduct(qce::utils::kroneckerProduct(result0.result, result1.result), result2.result); 
+    auto answer = (qce::DynamicQubitState(8) << ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2).finished();
+
+    // std::cout << result << "\n\n";
+    // std::cout << (qce::DynamicQubitState(8) << ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2).finished() << "\n";
+    assert(result2.result.isApprox(answer, GATE_EQ_PRECISION));
 }
 
 int main() {

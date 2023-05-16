@@ -6,8 +6,8 @@
 #include <Eigen/Dense>
 #include "Qubit.h"
 
-#ifndef __Qubit_consts__
-#define __Qubit_consts__
+#ifndef __QUBIT_CONSTS__
+#define __QUBIT_CONSTS__
 
 namespace qce {
 namespace qubitconsts {

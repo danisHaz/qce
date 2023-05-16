@@ -9,21 +9,30 @@
 #include "OperationGraph.hpp"
 
 namespace qce {
-    
-    class QubitEnv {
 
-        typedef std::shared_ptr<operations::BaseOperation<operations::OperationResultHolder<DynamicQubitState>>> BaseOperationPtr_t;
+    template<typename T>
+    class AbstractEnvironment {
+        virtual T provideExecutionArgs() const = 0;
+    };
 
-        typedef operations::OperationGraph<
-            BaseOperationPtr_t,
-            QubitState> QubitOperationGraph;
+    typedef std::shared_ptr<
+        operations::BaseOperation<
+        std::vector<unsigned>,
+        operations::OperationResultHolder<DynamicQubitState>
+        >> BaseOperationPtr_t;
+
+    typedef operations::OperationGraph<
+        BaseOperationPtr_t,
+        QubitState> QubitOperationGraph;
+
+    typedef qce::operations::OperationGraphHolder<qce::BaseOperationPtr_t, qce::QubitState> OperGraphState;
+
+    class QubitEnv : public AbstractEnvironment<OperGraphState> {
 
         private:
-
         QubitOperationGraph graph;
 
         public:
-
         QubitEnv();
         QubitEnv(const std::vector<Qubit>& qubits);
         QubitEnv(const Qubit& qubit);
@@ -88,5 +97,7 @@ namespace qce {
         
 
         qce::Qubit getQubit(unsigned qubitIndex) const;
+
+        OperGraphState provideExecutionArgs() const override;
     };
 } // namespace qce

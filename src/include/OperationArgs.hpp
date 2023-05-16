@@ -4,10 +4,10 @@
 #include "Qubit.h"
 
 namespace qce {
-
+namespace operations {
     struct OperationArgs {
         DynamicQubitState qstate;
-        std::vector<unsigned> numericArgs;
+        std::vector<unsigned> qubitIndices;
 
         OperationArgs();
         OperationArgs(const DynamicQubitState &);
@@ -16,5 +16,5 @@ namespace qce {
         OperationArgs(const DynamicQubitState &, const std::vector<unsigned> &);
         OperationArgs(DynamicQubitState &&, std::vector<unsigned> &&);
     };
-
+}
 } // qce
