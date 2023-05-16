@@ -115,8 +115,21 @@ void qubit_env_hadamard_xyz_test() {
     qce::simulator::SimpleSimulator sim;
     qce::simulator::Solution sol = sim.constructSolution(env);
     const auto ampl = qce::qubitconsts::_RSQRROOT_OF_2;
-    auto idealResult = (qce::DynamicQubitState(16)   <<    0,    0,    0, ampl,    0,    0,    0,    0,\
-                                                           0,    0,    0, -ampl,    0,    0,    0,    0).finished();
+    auto idealResult = (qce::DynamicQubitState(16) <<    0,    0,    0,  ampl,    0,    0,    0,    0,\
+                                                         0,    0,    0, -ampl,    0,    0,    0,    0).finished();
+
+    assert(sol.getResult().isApprox(idealResult, GATE_EQ_PRECISION));
+}
+
+void qubit_env_hadamard_cnot_test() {
+    qce::QubitEnv env(2, qce::qubitconsts::zero_basis_state);
+    env.hadamard(0);
+    env.cnot(1, 0);
+
+    qce::simulator::SimpleSimulator sim;
+    qce::simulator::Solution sol = sim.constructSolution(env);
+    const auto ampl = qce::qubitconsts::_RSQRROOT_OF_2;
+    auto idealResult = (qce::DynamicQubitState(4) << ampl, 0, 0, ampl).finished();
 
     assert(sol.getResult().isApprox(idealResult, GATE_EQ_PRECISION));
 }
@@ -130,4 +143,5 @@ int main() {
     qubit_env_hadamard_x_test();
     qubit_env_hadamard_y_test();
     qubit_env_hadamard_xyz_test();
+    qubit_env_hadamard_cnot_test();
 }
