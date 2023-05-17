@@ -1,32 +1,45 @@
 #pragma once
 
-#include "Qbit.h"
 #include <Eigen/Dense>
 #include <vector>
 
+#include "Qubit.h"
+#include "QubitConsts.hpp"
+#include "OperationArgs.hpp"
+#include "OperationGraph.hpp"
+
 namespace qce {
-    
-    class QubitEnv {
+
+    template<typename T>
+    class AbstractEnvironment {
+        virtual T provideExecutionArgs() const = 0;
+    };
+
+    typedef std::shared_ptr<
+        operations::BaseOperation<
+        std::vector<unsigned>,
+        operations::OperationResultHolder<DynamicQubitState>
+        >> BaseOperationPtr_t;
+
+    typedef operations::OperationGraph<
+        BaseOperationPtr_t,
+        QubitState> QubitOperationGraph;
+
+    typedef qce::operations::OperationGraphHolder<qce::BaseOperationPtr_t, qce::QubitState> OperGraphState;
+
+    class QubitEnv : public AbstractEnvironment<OperGraphState> {
 
         private:
-
-        std::vector<Qubit> arr;
-
-        bool checkQubitIndOutOfRange(unsigned qubitIndex);
-        void applyOperationOnQubit(unsigned qubitIndex, QubitMat_t mat);
-        void applyOperationOn2Qubit(unsigned fQubitIndex, unsigned sQubitIndex, TwoQubitMat_t mat);
+        QubitOperationGraph graph;
 
         public:
-
         QubitEnv();
-        QubitEnv(const std::vector<Qubit>& vec);
+        QubitEnv(const std::vector<Qubit>& qubits);
         QubitEnv(const Qubit& qubit);
-        QubitEnv(std::size_t qubitNumber, Qubit initialState = zero_basis_state);
+        QubitEnv(std::size_t qubitNumber, const QubitState &initialState);
 
-        /**
-         * Section with common gates
-        */
-        
+        // Section with common gates
+
         /**
          * Default Hadamard gate
         */
@@ -56,19 +69,15 @@ namespace qce {
         /**
          * Swap gate
         */
-        void swap();
+        void swap(unsigned firstQubitIndex, unsigned secondQubitIndex);
         /**
          * Controlled z gate
         */
-        void cz();
-        /**
-         * Controlled swap gate
-        */
-        void cswap();
+        void cz(unsigned zQubitIndex, unsigned controlQubitIndex);
         /**
          * Controlled phase gate
         */
-        void cs();
+        void cs(unsigned qubitIndex, unsigned controlQubitIndex);
         /**
          * Toffoli gate
         */
@@ -78,8 +87,13 @@ namespace qce {
         */
         void cfredkin();
 
-        void compute();
+        // Common gates section end
+
+        unsigned compute();
+        
 
         qce::Qubit getQubit(unsigned qubitIndex) const;
+
+        OperGraphState provideExecutionArgs() const override;
     };
 } // namespace qce

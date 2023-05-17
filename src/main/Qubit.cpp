@@ -1,10 +1,17 @@
 #include <iostream>
 #include <string>
 #include <complex>
-#include "Qbit.h"
+#include "Qubit.h"
 #include <Eigen/Dense>
+#include <cmath>
+#include <memory>
+#include "Exceptions.h"
 
 qce::Qubit::Qubit(std::complex<double> first, std::complex<double> second) {
+    if (abs((first * first + second * second) - std::complex<double>(1, 0)) != std::complex<double>(0, 0)) {
+        throw QUBIT_ENV_ERROR_CODE;
+    }
+
     this->state = Eigen::Array2cd(first, second);
 }
 
@@ -14,11 +21,15 @@ qce::Qubit::Qubit() {
 }
 
 qce::Qubit::Qubit(const Qubit& qubit) {
-    this->state = Eigen::Array2cd(qubit.state(0), qubit.state(1));
+    this->state = Eigen::Array2cd(qubit.state[0], qubit.state[1]);
 }
 
 qce::Qubit::Qubit(const qce::QubitState& otherState) {
-    this->state = qce::QubitState(otherState(0), otherState(1));
+    this->state = qce::QubitState(otherState[0], otherState[1]);
+}
+
+qce::Qubit::Qubit(std::shared_ptr<Qubit> qubitPtr) {
+    this->state = Eigen::Array2cd(qubitPtr->state[0], qubitPtr->state[1]);
 }
 
 qce::QubitStateT qce::Qubit::braState() const {
@@ -44,8 +55,3 @@ void qce::Qubit::setState(const QubitState& newState) {
 qce::DMatrState qce::Qubit::getDensityMatrix() const {
     return this->ketState() * this->braState();
 }
-
-qce::PureQubit::PureQubit(std::complex<double> first, std::complex<double> second): Qubit(first, second) {}
-qce::PureQubit::PureQubit(): Qubit() {}
-qce::PureQubit::PureQubit(const PureQubit& qubit): Qubit(qubit) {}
-qce::PureQubit::PureQubit(const qce::QubitState& state): Qubit(state) {}

@@ -1,95 +1,103 @@
-#include "QubitEnv.hpp"
 #include <algorithm>
+#include <memory>
+
+#include "QubitEnv.hpp"
 #include "Exceptions.h"
+#include "QubitConsts.hpp"
+#include "OperationGraph.hpp"
 
-qce::QubitEnv::QubitEnv() {
-    this->arr = std::vector<qce::Qubit>();
-}
+qce::QubitEnv::QubitEnv() {}
 
-qce::QubitEnv::QubitEnv(const std::vector<qce::Qubit>& vec) {
-    this->arr = std::vector<qce::Qubit>(vec.size());
-    for (std::size_t i = 0; i < vec.size(); i++) {
-        this->arr[i] = qce::Qubit(vec[i]);
+qce::QubitEnv::QubitEnv(const std::vector<qce::Qubit>& qubits) {
+    graph = QubitOperationGraph(qubits.size(), qubitconsts::zero_basis_state);
+
+    for (std::size_t i = 0; i < qubits.size(); i++) {
+        graph.changeState(i, std::move(qubits[i].ketState()));
     }
 }
 
 qce::QubitEnv::QubitEnv(const Qubit& qubit) {
-    this->arr = std::vector<qce::Qubit>(1);
-    this->arr[0] = qce::Qubit(qubit);
+    graph = QubitOperationGraph(1, qubit.ketState());
 }
 
-qce::QubitEnv::QubitEnv(std::size_t qubitNumber, Qubit initialState) {
-    this->arr = std::vector<qce::Qubit>(qubitNumber);
-    for (std::size_t i = 0; i < this->arr.size(); i++) {
-        this->arr[i] = qce::Qubit(initialState);
-    }
+qce::QubitEnv::QubitEnv(std::size_t qubitNumber, const QubitState &initialState) {
+    graph = QubitOperationGraph(qubitNumber, QubitState(initialState));
 }
 
-bool qce::QubitEnv::checkQubitIndOutOfRange(unsigned qubitIndex) {
-    if (qubitIndex >= this->arr.size()) {
-        return false;
-    }
-
-    return true;
+qce::OperGraphState qce::QubitEnv::provideExecutionArgs() const {
+    return graph.compileState();
 }
 
-void qce::QubitEnv::applyOperationOnQubit(unsigned qubitIndex, QubitMat_t mat) {
-    if (!checkQubitIndOutOfRange(qubitIndex)) {
-        throw INVALID_ARGUMENT_ERROR_CODE;
+std::vector<unsigned> GENERATE_INDICES_BASE(const qce::QubitOperationGraph &g) {
+    std::size_t cap = g.getStatesCount();
+    std::vector<unsigned> currentIndices(cap);
+    for (std::size_t i = 0; i < cap; i++) {
+        currentIndices[i] = i;
     }
 
-    const QubitState qubit = this->arr[qubitIndex].getState();
-    this->arr[qubitIndex].setState(mat * qubit);
+    return currentIndices;
 }
 
-void qce::QubitEnv::applyOperationOn2Qubit(unsigned fQubitIndex, unsigned sQubitIndex, TwoQubitMat_t mat) {
-    if (!checkQubitIndOutOfRange(fQubitIndex) || !checkQubitIndOutOfRange(sQubitIndex)) {
-        throw INVALID_ARGUMENT_ERROR_CODE;
-    }
-
-    const QubitState fqState = this->arr[fQubitIndex].getState();
-    const QubitState sqState = this->arr[sQubitIndex].getState();
-    Eigen::Matrix<std::complex<double>, 4, 1> combinedQState =
-        (Eigen::Matrix<std::complex<double>, 4, 1>() << fqState[0] * sqState[0], fqState[0] * sqState[1],\
-            fqState[1] * sqState[0], fqState[1] * sqState[1]).finished();
-
-    Eigen::Matrix<std::complex<double>, 4, 1> resCombinedQState =
-        mat * combinedQState;
-    
-    const QubitState resFqState = (QubitState() << resCombinedQState[0], resCombinedQState[1])
-        .finished();
-    const QubitState resSqState = (QubitState() << resCombinedQState[2], resCombinedQState[3])
-        .finished();
-
-    this->arr[fQubitIndex].setState(resFqState);
-    this->arr[sQubitIndex].setState(resSqState);
-}
+#ifndef _INDICES_GENERATOR_
+    #define GENERATE_INDICES_FUNC GENERATE_INDICES_BASE
+#endif
 
 void qce::QubitEnv::hadamard(unsigned qubitIndex) {
-    applyOperationOnQubit(qubitIndex, hadamard_gate);
+    std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
+    BaseOperationPtr_t hGate = std::make_shared<operations::HadamardGate>(qubitIndex, indices);
+    graph.add(hGate);
 }
 
 void qce::QubitEnv::x(unsigned qubitIndex) {
-    applyOperationOnQubit(qubitIndex, pauli_x_gate);
+    std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
+    BaseOperationPtr_t xGate = std::make_shared<operations::XGate>(qubitIndex, indices);
+    graph.add(xGate);
 }
 
 void qce::QubitEnv::y(unsigned qubitIndex) {
-    applyOperationOnQubit(qubitIndex, pauli_y_gate);
+    std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
+    BaseOperationPtr_t yGate = std::make_shared<operations::YGate>(qubitIndex, indices);
+    graph.add(yGate);
 }
 
 void qce::QubitEnv::z(unsigned qubitIndex) {
-    applyOperationOnQubit(qubitIndex, pauli_z_gate);
+    std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
+    BaseOperationPtr_t zGate = std::make_shared<operations::ZGate>(qubitIndex, indices);
+    graph.add(zGate);
 }
 
 void qce::QubitEnv::s(unsigned qubitIndex) {
-    applyOperationOnQubit(qubitIndex, phase_s_gate);
+    std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
+    BaseOperationPtr_t sGate = std::make_shared<operations::PhaseGate>(qubitIndex, indices);
+    graph.add(sGate);
 }
 
 void qce::QubitEnv::cnot(unsigned inverseQubitIndex, unsigned controlQubitIndex) {
-    applyOperationOn2Qubit(controlQubitIndex, inverseQubitIndex, cnot_gate);
+    std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
+    std::vector<unsigned> controls = {controlQubitIndex};
+    BaseOperationPtr_t cnotGate =
+        std::make_shared<operations::CnotGate>(controls, inverseQubitIndex, indices);
+    graph.add(cnotGate);
 }
 
-qce::Qubit qce::QubitEnv::getQubit(unsigned qubitIndex) const {
-    Qubit q = this->arr[qubitIndex];
-    return q.getState();
+void qce::QubitEnv::swap(unsigned firstQubitIndex, unsigned secondQubitIndex) {
+    std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
+    std::vector<unsigned> controls = {secondQubitIndex};
+    BaseOperationPtr_t swapGate =
+        std::make_shared<operations::SwapGate>(controls, firstQubitIndex, indices);
+    graph.add(swapGate);
+}
+
+void qce::QubitEnv::cz(unsigned zQubitIndex, unsigned controlQubitIndex) {
+    std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
+    std::vector<unsigned> controls = {controlQubitIndex};
+    BaseOperationPtr_t czGate = std::make_shared<operations::CZGate>(controls, zQubitIndex, indices);
+    graph.add(czGate);
+}
+
+void qce::QubitEnv::cs(unsigned qubitIndex, unsigned controlQubitIndex) {
+    std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
+    std::vector<unsigned> controls = {controlQubitIndex};
+    BaseOperationPtr_t csGate = std::make_shared<operations::CPhaseGate>(controls, qubitIndex, indices);
+    graph.add(csGate);
 }
