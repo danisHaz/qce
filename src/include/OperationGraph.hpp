@@ -5,6 +5,7 @@
 #include <cassert>
 #include <queue>
 #include <cassert>
+#include <list>
 
 #include "Exceptions.h"
 #include "QubitVector.hpp"

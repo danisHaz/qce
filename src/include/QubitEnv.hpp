@@ -75,13 +75,9 @@ namespace qce {
         */
         void cz(unsigned zQubitIndex, unsigned controlQubitIndex);
         /**
-         * Controlled swap gate
-        */
-        void cswap();
-        /**
          * Controlled phase gate
         */
-        void cs();
+        void cs(unsigned qubitIndex, unsigned controlQubitIndex);
         /**
          * Toffoli gate
         */
@@ -93,7 +89,7 @@ namespace qce {
 
         // Common gates section end
 
-        void compute();
+        unsigned compute();
         
 
         qce::Qubit getQubit(unsigned qubitIndex) const;

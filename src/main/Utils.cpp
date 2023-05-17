@@ -1,4 +1,6 @@
 #include <random>
+#include <cassert>
+#include <Eigen/Dense>
 
 #include "Utils.hpp"
 #include "Qubit.h"
@@ -63,4 +65,45 @@ qce::DynamicQubitState qce::utils::combineStates(
     }
 
     return result;
+}
+
+unsigned qce::utils::probabilityRandomChoice(Eigen::Matrix<double, -1, 1> probabilities) {
+
+    assert(probabilities.size()!=0);
+
+    double probSum = 0;
+    for (double p: probabilities) {
+        probSum += p;
+    }
+    assert(abs(probSum - 1.) <= _probability_precision);
+
+    int elementCount = (int)(1 / _probability_precision);
+    std::random_device randDevice;
+    std::mt19937 engine{randDevice()};
+    std::uniform_int_distribution<int> dist(0, elementCount);
+    double randTarget = (double)dist(engine);
+
+    int sum = 0;
+    for (std::size_t i = 0; i < probabilities.size(); i++) {
+        double p = probabilities[i];
+        double cur = sum + elementCount * p;
+        if (sum <= randTarget && randTarget < cur) {
+            return i;
+        }
+
+        sum = cur;
+    }
+
+    return probabilities.size()-1;
+}
+
+Eigen::Matrix<double, -1, 1> qce::utils::convertAmplitudes2Probs(qce::DynamicQubitState qState) {
+    Eigen::Matrix<double, -1, 1> probs(qState.size());
+
+    for (std::size_t i = 0; i < qState.size(); i++) {
+        Eigen::dcomplex ampl = qState[i];
+        probs[i] = abs((ampl * ampl).real());
+    }
+
+    return probs;
 }

@@ -75,14 +75,16 @@ void qce::QubitEnv::s(unsigned qubitIndex) {
 void qce::QubitEnv::cnot(unsigned inverseQubitIndex, unsigned controlQubitIndex) {
     std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
     std::vector<unsigned> controls = {controlQubitIndex};
-    BaseOperationPtr_t cnotGate = std::make_shared<operations::CnotGate>(controls, inverseQubitIndex, indices);
+    BaseOperationPtr_t cnotGate =
+        std::make_shared<operations::CnotGate>(controls, inverseQubitIndex, indices);
     graph.add(cnotGate);
 }
 
 void qce::QubitEnv::swap(unsigned firstQubitIndex, unsigned secondQubitIndex) {
     std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
     std::vector<unsigned> controls = {secondQubitIndex};
-    BaseOperationPtr_t swapGate = std::make_shared<operations::SwapGate>(controls, firstQubitIndex, indices);
+    BaseOperationPtr_t swapGate =
+        std::make_shared<operations::SwapGate>(controls, firstQubitIndex, indices);
     graph.add(swapGate);
 }
 
@@ -91,4 +93,11 @@ void qce::QubitEnv::cz(unsigned zQubitIndex, unsigned controlQubitIndex) {
     std::vector<unsigned> controls = {controlQubitIndex};
     BaseOperationPtr_t czGate = std::make_shared<operations::CZGate>(controls, zQubitIndex, indices);
     graph.add(czGate);
+}
+
+void qce::QubitEnv::cs(unsigned qubitIndex, unsigned controlQubitIndex) {
+    std::vector<unsigned> indices = GENERATE_INDICES_FUNC(graph);
+    std::vector<unsigned> controls = {controlQubitIndex};
+    BaseOperationPtr_t csGate = std::make_shared<operations::CPhaseGate>(controls, qubitIndex, indices);
+    graph.add(csGate);
 }

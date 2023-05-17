@@ -2,8 +2,9 @@
 
 #include <string>
 #include <complex>
-#include "Utils.hpp"
 #include <Eigen/Dense>
+
+#include "Utils.hpp"
 #include "Qubit.h"
 
 #ifndef __QUBIT_CONSTS__

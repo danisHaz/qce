@@ -6,6 +6,7 @@
 #include "OperationGraph.hpp"
 #include "QubitEnv.hpp"
 #include "OperationArgs.hpp"
+#include "Utils.hpp"
 
 namespace qce {
 namespace simulator {
@@ -16,8 +17,15 @@ namespace simulator {
 
         Solution(DynamicQubitState &&state): result{state} {}
 
-        const DynamicQubitState& getResult() {
+        const DynamicQubitState& getResult() const {
             return result;
+        }
+
+        const unsigned compute() const {
+            using namespace qce::utils;
+            return probabilityRandomChoice(
+                convertAmplitudes2Probs(result)
+            );
         }
     };
 

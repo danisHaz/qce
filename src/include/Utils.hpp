@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <Eigen/Eigen>
+#include <Eigen/Dense>
 #include <random>
 #include <vector>
 
@@ -9,6 +9,13 @@
 
 namespace qce { 
 namespace utils {
+
+    #ifndef _rrand_
+    #define _rrand_
+
+    #define _rrand32u_func rand
+    #define _probability_precision ((double)1e-5)
+    #endif
 
     template<typename base_t, typename power_t>
     base_t binpow(base_t x, power_t y) {
@@ -50,10 +57,6 @@ namespace utils {
         return ind;
     }
 
-    #ifndef _rrand32u_func
-    #define _rrand32u_func rand
-    #endif
-
     int32_t rrandom32();
     int64_t rrandom64();
     uint32_t rrandom32u();
@@ -77,6 +80,12 @@ namespace utils {
     qce::DynamicQubitState combineStates(
         const std::vector<qce::DynamicQubitState> &states
     );
+    /**
+     * Function for picking random number in specified range  with given probabilities
+     * of every possible outcome.
+    */
+    unsigned probabilityRandomChoice(Eigen::Matrix<double, -1, 1> probabilities);
+    Eigen::Matrix<double, -1, 1> convertAmplitudes2Probs(qce::DynamicQubitState qState);
 
 } // utils
 } // qce
