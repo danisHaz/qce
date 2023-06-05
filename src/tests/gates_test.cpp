@@ -1,12 +1,14 @@
 #include <cassert>
+#include <cstdint>
+
 #include "OperationGraph.hpp"
 #include "OperationArgs.hpp"
 
 const double GATE_EQ_PRECISION = 1e-5;
 
 void hadamard_gate_test() {
-    std::vector<unsigned> qubitPositions = {0, 1, 2};
-    std::vector<unsigned> controlQubits;
+    std::vector<std::size_t> qubitPositions = {0, 1, 2};
+    std::vector<std::size_t> controlQubits;
     const float ampl = qce::qubitconsts::_RSQRROOT_OF_2;
     qce::operations::HadamardGate gate(1, qubitPositions);
     qce::DynamicQubitState state = (qce::DynamicQubitState(8) << 0,0,0,0,ampl,0,ampl,0).finished();
@@ -19,8 +21,8 @@ void hadamard_gate_test() {
 }
 
 void cnot_gate_test() {
-    std::vector<unsigned> qubitPositions = {0, 1, 2};
-    std::vector<unsigned> controlQubits = {0};
+    std::vector<std::size_t> qubitPositions = {0, 1, 2};
+    std::vector<std::size_t> controlQubits = {0};
     qce::operations::CnotGate gate(controlQubits, 1, qubitPositions);
     qce::DynamicQubitState state = (qce::DynamicQubitState(8) << 0,0,0,0,1,0,0,0).finished();
 
@@ -40,8 +42,8 @@ void cnot_gate_test() {
 }
 
 void swap_gate_test() {
-    std::vector<unsigned> qubitPositions = {0, 1, 2};
-    std::vector<unsigned> controlQubits = {0};
+    std::vector<std::size_t> qubitPositions = {0, 1, 2};
+    std::vector<std::size_t> controlQubits = {0};
     qce::operations::SwapGate gate(controlQubits, 1, qubitPositions);
     qce::DynamicQubitState state = (qce::DynamicQubitState(8) << 0,0,0,0,1,0,0,0).finished();
 
@@ -62,8 +64,8 @@ void swap_gate_test() {
 }
 
 void cz_gate_test() {
-    std::vector<unsigned> qubitPositions = {0, 1, 2};
-    std::vector<unsigned> controlQubits = {0};
+    std::vector<std::size_t> qubitPositions = {0, 1, 2};
+    std::vector<std::size_t> controlQubits = {0};
     qce::operations::CZGate gate(controlQubits, 2, qubitPositions);
     qce::DynamicQubitState state = (qce::DynamicQubitState(8) << 0.5,0.5,0,0,0.5,0.5,0,0).finished();
 
@@ -82,8 +84,8 @@ void cz_gate_test() {
 }
 
 void cphase_gate_test() {
-    std::vector<unsigned> qubitPositions = {0, 1, 2};
-    std::vector<unsigned> controlQubits = {0};
+    std::vector<std::size_t> qubitPositions = {0, 1, 2};
+    std::vector<std::size_t> controlQubits = {0};
     const float ampl = qce::qubitconsts::_RSQRROOT_OF_2;
     qce::operations::CPhaseGate gate(controlQubits, 2, qubitPositions);
     qce::DynamicQubitState state = (qce::DynamicQubitState(8) << ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2,ampl/2).finished();
@@ -94,7 +96,7 @@ void cphase_gate_test() {
 }
 
 void chain_multiple_hadamard_test() {
-    std::vector<unsigned> qubitPositions = {0, 1, 2};
+    std::vector<std::size_t> qubitPositions = {0, 1, 2};
     qce::operations::HadamardGate gate0(0, qubitPositions);
     qce::operations::HadamardGate gate1(1, qubitPositions);
     qce::operations::HadamardGate gate2(2, qubitPositions);

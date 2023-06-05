@@ -1,5 +1,6 @@
 #include "Matr.hpp"
 #include <cstddef>
+#include <cstdint>
 
 #ifndef MATRIX_DIMENSIONS_NOT_EQUAL
 #define MATRIX_DIMENSIONS_NOT_EQUAL

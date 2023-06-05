@@ -21,7 +21,7 @@ namespace simulator {
             return result;
         }
 
-        const unsigned compute() const {
+        const std::size_t compute() const {
             using namespace qce::utils;
             return probabilityRandomChoice(
                 convertAmplitudes2Probs(result)

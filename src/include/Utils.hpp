@@ -64,7 +64,7 @@ namespace utils {
 
     template<typename T>
     std::vector<T> mergeVectors(const std::vector<T> &a, const std::vector<T> &b) {
-        std::vector<T> result();
+        std::vector<T> result;
         result.reserver(a.size() + b.size());
         result.insert(result.begin(), a.begin(), a.end());
         result.insert(result.begin()+(ptrdiff_t)a.size(), b.begin(), b.end());

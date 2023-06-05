@@ -7,14 +7,14 @@ namespace qce {
 namespace operations {
     struct OperationArgs {
         DynamicQubitState qstate;
-        std::vector<unsigned> qubitIndices;
+        std::vector<uint32_t> qubitIndices;
 
         OperationArgs();
         OperationArgs(const DynamicQubitState &);
         OperationArgs(DynamicQubitState &&);
-        OperationArgs(const std::vector<unsigned> &);
-        OperationArgs(const DynamicQubitState &, const std::vector<unsigned> &);
-        OperationArgs(DynamicQubitState &&, std::vector<unsigned> &&);
+        OperationArgs(const std::vector<uint32_t> &);
+        OperationArgs(const DynamicQubitState &, const std::vector<uint32_t> &);
+        OperationArgs(DynamicQubitState &&, std::vector<uint32_t> &&);
     };
 }
 } // qce

@@ -10,10 +10,10 @@
 
 int main() {
     using namespace std::complex_literals;
-    std::vector<unsigned> qvIndices = {0, 1};
+    std::vector<std::size_t> qvIndices = {0, 1};
 
-    std::vector<unsigned> qubitPositions = {0, 1, 2};
-    std::vector<unsigned> controlQubits = {0};
+    std::vector<std::size_t> qubitPositions = {0, 1, 2};
+    std::vector<std::size_t> controlQubits = {0};
     qce::operations::CnotGate gate(controlQubits, 1, qubitPositions);
     qce::operations::HadamardGate hadamardGate(1, {0, 1, 2});
 

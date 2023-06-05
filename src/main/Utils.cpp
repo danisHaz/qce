@@ -1,6 +1,7 @@
 #include <random>
 #include <cassert>
 #include <Eigen/Dense>
+#include <cstdint>
 
 #include "Utils.hpp"
 #include "Qubit.h"
@@ -77,13 +78,13 @@ unsigned qce::utils::probabilityRandomChoice(Eigen::Matrix<double, -1, 1> probab
     }
     assert(abs(probSum - 1.) <= _probability_precision);
 
-    int elementCount = (int)(1 / _probability_precision);
+    uint32_t elementCount = (uint32_t)(1 / _probability_precision);
     std::random_device randDevice;
     std::mt19937 engine{randDevice()};
-    std::uniform_int_distribution<int> dist(0, elementCount);
+    std::uniform_int_distribution<uint32_t> dist(0, elementCount);
     double randTarget = (double)dist(engine);
 
-    int sum = 0;
+    uint32_t sum = 0;
     for (std::size_t i = 0; i < probabilities.size(); i++) {
         double p = probabilities[i];
         double cur = sum + elementCount * p;
