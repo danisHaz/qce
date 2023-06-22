@@ -4,14 +4,13 @@ include(CTest)
 
 set(COMMON_SOURCES
     src/main/Qubit.cpp
-    src/main/Matr.cpp
     src/main/Utils.cpp
     src/main/QubitEnv.cpp
     src/main/OperationGraph.cpp
     src/main/OperationArgs.cpp
 )
 
-set(CMAKE_CXX_FLAGS_DEBUG "-fsanitize=address,undefined")
+set(CMAKE_CXX_FLAGS_DEBUG "-fsanitize=address,undefined -Wall")
 set(CMAKE_CXX_FLAGS "-std=c++17")
 
 add_executable(Platform

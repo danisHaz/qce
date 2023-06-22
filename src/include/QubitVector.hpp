@@ -22,7 +22,7 @@ namespace qce {
         public:
         MultipleQubitState(const std::vector<unsigned> &indices) {
             this->indices = std::vector<unsigned>(indices);
-            std::uint64_t stateSize = utils::binpow<std::uint64_t, std::size_t>(2, indices.size());
+            uint64_t stateSize = utils::binpow<uint64_t, std::size_t>(2, indices.size());
             state = std::make_shared<QubitMatrix_t>(stateSize);
         }
 

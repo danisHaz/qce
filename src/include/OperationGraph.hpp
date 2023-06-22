@@ -19,20 +19,20 @@ namespace operations {
     // utils
     template<typename result_t>
     struct OperationResultHolder {
-        std::vector<unsigned> qubits;
+        std::vector<std::size_t> qubits;
         const result_t result;
 
-        OperationResultHolder(const std::vector<unsigned> &qubits, const result_t result) {
-            this->qubits = std::vector<unsigned>(qubits);
+        OperationResultHolder(const std::vector<std::size_t> &qubits, const result_t result) {
+            this->qubits = std::vector<std::size_t>(qubits);
             this->result = result;
         }
 
-        OperationResultHolder(std::vector<unsigned> &&qubits, const result_t result): result{result_t(result)} {
-            this->qubits = std::vector<unsigned>(qubits);
+        OperationResultHolder(std::vector<std::size_t> &&qubits, const result_t result): result{result_t(result)} {
+            this->qubits = std::vector<std::size_t>(qubits);
         }
 
         OperationResultHolder(OperationResultHolder &&other): result{result(other.result)} {
-            qubits = std::vector<unsigned>(other.qubits);
+            qubits = std::vector<std::size_t>(other.qubits);
         }
 
         ~OperationResultHolder() {
@@ -78,27 +78,27 @@ namespace operations {
     };
 
     template<typename OperResult_t>
-    class QubitOperation : public Operation<std::vector<unsigned>, OperResult_t, OperationResultHolder<DynamicQubitState>> {
+    class QubitOperation : public Operation<std::vector<std::size_t>, OperResult_t, OperationResultHolder<DynamicQubitState>> {
         
         #ifndef QUBIT_NUMBER_UNDEFINED
             #define QUBIT_NUMBER_UNDEFINED 0
         #endif
 
         protected:
-        std::vector<unsigned> controlQubits;
-        unsigned targetQubit;
-        unsigned qubitNumber;
+        std::vector<std::size_t> controlQubits;
+        std::size_t targetQubit;
+        std::size_t qubitNumber;
 
         public:
         std::string operationName = "QubitOperation";
 
         QubitOperation(
-            const std::vector<unsigned> &controlQubits,
-            unsigned targetQubit,
-            const std::vector<unsigned> &qubitOrder,
+            const std::vector<std::size_t> &controlQubits,
+            std::size_t targetQubit,
+            const std::vector<std::size_t> &qubitOrder,
             const std::string &operationName = ""
-        ): Operation<std::vector<unsigned>, OperResult_t, OperationResultHolder<DynamicQubitState>>(qubitOrder), targetQubit(targetQubit) {
-            this->controlQubits = std::vector<unsigned>(controlQubits);
+        ): Operation<std::vector<std::size_t>, OperResult_t, OperationResultHolder<DynamicQubitState>>(qubitOrder), targetQubit(targetQubit) {
+            this->controlQubits = std::vector<std::size_t>(controlQubits);
             this->qubitNumber = QUBIT_NUMBER_UNDEFINED;
             if (operationName != "") {
                 this->operationName = operationName;
@@ -106,12 +106,12 @@ namespace operations {
         }
 
         QubitOperation(
-            const std::vector<unsigned> &controlQubits,
-            unsigned targetQubit,
-            std::vector<unsigned> &&qubitOrder,
+            const std::vector<std::size_t> &controlQubits,
+            std::size_t targetQubit,
+            std::vector<std::size_t> &&qubitOrder,
             const std::string &operationName = ""
-        ): Operation<std::vector<unsigned>, OperResult_t, DynamicQubitState>(qubitOrder), targetQubit(targetQubit) {
-            this->controlQubits = std::vector<unsigned>(controlQubits);
+        ): Operation<std::vector<std::size_t>, OperResult_t, DynamicQubitState>(qubitOrder), targetQubit(targetQubit) {
+            this->controlQubits = std::vector<std::size_t>(controlQubits);
             this->qubitNumber = QUBIT_NUMBER_UNDEFINED;
             if (operationName != "") {
                 this->operationName = operationName;
@@ -125,7 +125,7 @@ namespace operations {
             OperResult_t operation = constructOperation();
 
             return OperationResultHolder<DynamicQubitState>(
-                std::move(std::vector<unsigned>(*this->data)),
+                std::move(std::vector<std::size_t>(*this->data)),
                 std::move(operation * args.qstate)
             );
         }
@@ -135,8 +135,8 @@ namespace operations {
         const qce::QubitMat_t &singleOperationMatrix;
         public:
         SingleQubitOperation(
-            unsigned targetQubit,
-            const std::vector<unsigned> &qubitOrder,
+            std::size_t targetQubit,
+            const std::vector<std::size_t> &qubitOrder,
             const qce::QubitMat_t &singleOperationMatrix,
             const std::string &operationName
         ): QubitOperation({}, targetQubit, qubitOrder, operationName), singleOperationMatrix{singleOperationMatrix} {
@@ -146,8 +146,8 @@ namespace operations {
         }
 
         SingleQubitOperation(
-            unsigned targetQubit,
-            std::vector<unsigned> &&qubitOrder,
+            std::size_t targetQubit,
+            std::vector<std::size_t> &&qubitOrder,
             const qce::QubitMat_t &singleOperationMatrix,
             const std::string &operationName
         ): QubitOperation({}, targetQubit, qubitOrder, operationName), singleOperationMatrix{singleOperationMatrix} {
@@ -171,61 +171,61 @@ namespace operations {
     class HadamardGate : public SingleQubitOperation {    
         public:
         HadamardGate(
-            unsigned targetQubit,
-            const std::vector<unsigned> &qubitOrder
+            std::size_t targetQubit,
+            const std::vector<std::size_t> &qubitOrder
         ): SingleQubitOperation(targetQubit, qubitOrder, qubitconsts::hadamard_gate, "Hadamard gate") {}
 
         HadamardGate(
-            unsigned targetQubit,
-            std::vector<unsigned> &&qubitOrder
+            std::size_t targetQubit,
+            std::vector<std::size_t> &&qubitOrder
         ): SingleQubitOperation(targetQubit, qubitOrder, qubitconsts::hadamard_gate, "Hadamard gate") {}
     };
     class XGate : public SingleQubitOperation {
         public:
         XGate(
-            unsigned targetQubit,
-            const std::vector<unsigned> &qubitOrder
+            std::size_t targetQubit,
+            const std::vector<std::size_t> &qubitOrder
         ): SingleQubitOperation(targetQubit, qubitOrder, qubitconsts::pauli_x_gate, "X gate") {}
 
         XGate(
-            unsigned targetQubit,
-            std::vector<unsigned> &&qubitOrder
+            std::size_t targetQubit,
+            std::vector<std::size_t> &&qubitOrder
         ): SingleQubitOperation(targetQubit, qubitOrder, qubitconsts::pauli_x_gate, "X gate") {}
     };
     class YGate : public SingleQubitOperation {
         public:
         YGate(
-            unsigned targetQubit,
-            const std::vector<unsigned> &qubitOrder
+            std::size_t targetQubit,
+            const std::vector<std::size_t> &qubitOrder
         ): SingleQubitOperation(targetQubit, qubitOrder, qubitconsts::pauli_y_gate, "Y gate") {}
 
         YGate(
-            unsigned targetQubit,
-            std::vector<unsigned> &&qubitOrder
+            std::size_t targetQubit,
+            std::vector<std::size_t> &&qubitOrder
         ): SingleQubitOperation(targetQubit, qubitOrder, qubitconsts::pauli_y_gate, "Y gate") {}
     };
     class ZGate : public SingleQubitOperation {
         public:
         ZGate(
-            unsigned targetQubit,
-            const std::vector<unsigned> &qubitOrder
+            std::size_t targetQubit,
+            const std::vector<std::size_t> &qubitOrder
         ): SingleQubitOperation(targetQubit, qubitOrder, qubitconsts::pauli_z_gate, "Z gate") {}
 
         ZGate(
-            unsigned targetQubit,
-            std::vector<unsigned> &&qubitOrder
+            std::size_t targetQubit,
+            std::vector<std::size_t> &&qubitOrder
         ): SingleQubitOperation(targetQubit, qubitOrder, qubitconsts::pauli_z_gate, "Z gate") {}
     };
     class PhaseGate : public SingleQubitOperation {
         public:
         PhaseGate(
-            unsigned targetQubit,
-            const std::vector<unsigned> &qubitOrder
+            std::size_t targetQubit,
+            const std::vector<std::size_t> &qubitOrder
         ): SingleQubitOperation(targetQubit, qubitOrder, qubitconsts::phase_s_gate, "S gate") {}
 
         PhaseGate(
-            unsigned targetQubit,
-            std::vector<unsigned> &&qubitOrder
+            std::size_t targetQubit,
+            std::vector<std::size_t> &&qubitOrder
         ): SingleQubitOperation(targetQubit, qubitOrder, qubitconsts::phase_s_gate, "S gate") {}  
     };
 
@@ -234,9 +234,9 @@ namespace operations {
     class CnotGate : public QubitOperation<DynamicQubitMat_t> {
         public:
         CnotGate(
-            const std::vector<unsigned> &controlQubits,
-            unsigned targetQubit,
-            const std::vector<unsigned> &qubitOrder
+            const std::vector<std::size_t> &controlQubits,
+            std::size_t targetQubit,
+            const std::vector<std::size_t> &qubitOrder
         ): QubitOperation(controlQubits, targetQubit, qubitOrder) {
             if (controlQubits.size() != 1) {
                 throw new std::invalid_argument("Provided invalid control qubits to cnot gate");
@@ -281,9 +281,9 @@ namespace operations {
     class SwapGate : public QubitOperation<DynamicQubitMat_t> {
         public:
         SwapGate(
-            const std::vector<unsigned> &controlQubits,
-            unsigned targetQubit,
-            const std::vector<unsigned> &qubitOrder
+            const std::vector<std::size_t> &controlQubits,
+            std::size_t targetQubit,
+            const std::vector<std::size_t> &qubitOrder
         ): QubitOperation(controlQubits, targetQubit, qubitOrder) {}
         
         DynamicQubitMat_t constructOperation() override {
@@ -322,9 +322,9 @@ namespace operations {
     class CZGate : public QubitOperation<DynamicQubitMat_t> {
         public:
         CZGate(
-            const std::vector<unsigned> &controlQubits,
-            unsigned targetQubit,
-            const std::vector<unsigned> &qubitOrder
+            const std::vector<std::size_t> &controlQubits,
+            std::size_t targetQubit,
+            const std::vector<std::size_t> &qubitOrder
         ): QubitOperation(controlQubits, targetQubit, qubitOrder) {}
         
         DynamicQubitMat_t constructOperation() override {
@@ -359,9 +359,9 @@ namespace operations {
     class CPhaseGate : public QubitOperation<DynamicQubitMat_t> {
         public:
         CPhaseGate(
-            const std::vector<unsigned> &controlQubits,
-            unsigned targetQubit,
-            const std::vector<unsigned> &qubitOrder
+            const std::vector<std::size_t> &controlQubits,
+            std::size_t targetQubit,
+            const std::vector<std::size_t> &qubitOrder
         ): QubitOperation(controlQubits, targetQubit, qubitOrder) {}
         
         DynamicQubitMat_t constructOperation() override {
@@ -452,8 +452,8 @@ namespace operations {
         std::vector<State_t> initialStates;
 
         // merge-find set for qubit indices in particular states 
-        std::vector<unsigned> parentIndices;
-        std::vector<std::list<unsigned>> qubitGraph;
+        std::vector<std::size_t> parentIndices;
+        std::vector<std::list<std::size_t>> qubitGraph;
 
         // dsu part
         void appendQubitIndex() {
@@ -462,13 +462,13 @@ namespace operations {
             qubitGraph.push_back({newIndex});
         }
 
-        unsigned getParentQubitIndex(unsigned ind) {
+        std::size_t getParentQubitIndex(std::size_t ind) {
             return (ind == parentIndices[ind]) ? ind : getParentQubitIndex(parentIndices[ind]);
         }
 
-        void unionQubitSets(unsigned first, unsigned second) {
-            unsigned firstP = getParentQubitIndex(first);
-            unsigned secondP = getParentQubitIndex(second);
+        void unionQubitSets(std::size_t first, std::size_t second) {
+            std::size_t firstP = getParentQubitIndex(first);
+            std::size_t secondP = getParentQubitIndex(second);
 
             if (firstP != secondP) {
                 if (utils::rrandom32() & 1) {
@@ -485,10 +485,10 @@ namespace operations {
         // end dsu part
 
         public:        
-        std::vector<unsigned> findQubitUnion(unsigned ind) {
-            std::vector<unsigned> result(qubitGraph[ind].size());
+        std::vector<std::size_t> findQubitUnion(std::size_t ind) {
+            std::vector<std::size_t> result(qubitGraph[ind].size());
 
-            for (std::list<unsigned>::iterator it = qubitGraph[ind].begin(); it != qubitGraph[ind].end(); ++it) {
+            for (std::list<std::size_t>::iterator it = qubitGraph[ind].begin(); it != qubitGraph[ind].end(); ++it) {
                 result.emplace_back(*it);
             }
 
@@ -552,16 +552,16 @@ namespace operations {
             initialStates[stateIndex] = State_t(newState);
         }
 
-        const std::size_t qubitsCount() const {
+        const std::size_t getQubitsCount() const {
             return initialStates.size();
         }
 
-        void uniteIndices(std::vector<unsigned> indices) {
+        void uniteIndices(std::vector<std::size_t> indices) {
             if (indices.size() == 0) {
                 return;
             }
 
-            std::vector<unsigned> result;
+            std::vector<std::size_t> result;
 
             for (std::size_t i = 1; i < indices.size(); i++) {
                 unionQubitSets(indices[i-1], indices[i]);
@@ -570,10 +570,6 @@ namespace operations {
 
         OperationGraphHolder<OperationType_t, State_t> compileState() const {
             return OperationGraphHolder<OperationType_t, State_t>(nodes, initialStates);
-        }
-
-        std::size_t getStatesCount() const {
-            return initialStates.size();
         }
     };
 } // namespace operations

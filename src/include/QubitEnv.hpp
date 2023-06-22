@@ -17,7 +17,7 @@ namespace qce {
 
     typedef std::shared_ptr<
         operations::BaseOperation<
-        std::vector<unsigned>,
+        std::vector<std::size_t>,
         operations::OperationResultHolder<DynamicQubitState>
         >> BaseOperationPtr_t;
 
@@ -43,41 +43,41 @@ namespace qce {
         /**
          * Default Hadamard gate
         */
-        void hadamard(unsigned qubitIndex);
+        void hadamard(std::size_t qubitIndex);
 
         /**
          * Sigma_x gate
         */
-        void x(unsigned qubitIndex);
+        void x(std::size_t qubitIndex);
         /**
          * Sigma_y gate
         */
-        void y(unsigned qubitIndex);
+        void y(std::size_t qubitIndex);
         /**
          * Sigma_z gate
         */
-        void z(unsigned qubitIndex);
+        void z(std::size_t qubitIndex);
         /**
          * S (phase) gate
         */
-        void s(unsigned qubitIndex);
+        void s(std::size_t qubitIndex);
         // void t();
         /**
          * Controlled NOT gate
         */
-        void cnot(unsigned inverseQubitIndex, unsigned controlQubitIndex);
+        void cnot(std::size_t inverseQubitIndex, std::size_t controlQubitIndex);
         /**
          * Swap gate
         */
-        void swap(unsigned firstQubitIndex, unsigned secondQubitIndex);
+        void swap(std::size_t firstQubitIndex, std::size_t secondQubitIndex);
         /**
          * Controlled z gate
         */
-        void cz(unsigned zQubitIndex, unsigned controlQubitIndex);
+        void cz(std::size_t zQubitIndex, std::size_t controlQubitIndex);
         /**
          * Controlled phase gate
         */
-        void cs(unsigned qubitIndex, unsigned controlQubitIndex);
+        void cs(std::size_t qubitIndex, std::size_t controlQubitIndex);
         /**
          * Toffoli gate
         */
@@ -89,10 +89,11 @@ namespace qce {
 
         // Common gates section end
 
-        unsigned compute();
+        std::size_t compute();
         
 
-        qce::Qubit getQubit(unsigned qubitIndex) const;
+        qce::Qubit getQubit(std::size_t qubitIndex) const;
+        std::size_t getQubitCount() const;
 
         OperGraphState provideExecutionArgs() const override;
     };
